@@ -29,7 +29,7 @@ class button (pygame.sprite.Sprite) :
         if self.rect_collosion.collidepoint(mouse_position):
             if self.checking_surface:
                 display_surface.blit(self.hover_surface , self.rect)
-                self.check_input(click= pygame.mouse.get_pressed()[0])
+                self.check_input(click= pygame.mouse.get_just_pressed()[0])
             else :
                 #i make a black surface has a low opacity to show i hover on the button
                 darkening_surface = pygame.Surface((self.rect_collosion.width, self.rect_collosion.height))
@@ -38,18 +38,18 @@ class button (pygame.sprite.Sprite) :
                 darkening_surface.set_alpha(50)
                 display_surface.blit(self.image, self.rect)
                 display_surface.blit(darkening_surface,dark_rect)
-                self.check_input(click= pygame.mouse.get_pressed()[0])
+                self.check_input(click= pygame.mouse.get_just_pressed()[0])
         else :
             self.clicked=False
             display_surface.blit(self.image, self.rect)
 def store () :
     button_groups=pygame.sprite.Group()
-    back_button=button(surface=pygame.image.load(r"game project\attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\back_button_pressed.png").convert_alpha(),pos=(w/2,h-120), groups=button_groups)
-    buy_button_1=button(surface=pygame.image.load(r"game project\attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\buy_button_pressed.png").convert_alpha(),pos=(630,440), groups=button_groups)
-    buy_button_2=button(surface=pygame.image.load(r"game project\attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\buy_button_pressed.png").convert_alpha(),pos=(415,440), groups=button_groups)
-    buy_button_2=button(surface=pygame.image.load(r"game project\attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\buy_button_pressed.png").convert_alpha(),pos=(845,440), groups=button_groups)
-    store_window=pygame.image.load(r"game project\attachment\store_window.png").convert_alpha()
-    BG_store=pygame.image.load(r"game project\attachment\general_BG.png").convert_alpha()
+    back_button=button(surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=(w/2,h-120), groups=button_groups)
+    buy_button_1=button(surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(630,440), groups=button_groups)
+    buy_button_2=button(surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(415,440), groups=button_groups)
+    buy_button_2=button(surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(845,440), groups=button_groups)
+    store_window=pygame.image.load(r"attachment\store_window.png").convert_alpha()
+    BG_store=pygame.image.load(r"attachment\general_BG.png").convert_alpha()
     store_rect=store_window.get_frect(center=(w/2 ,h/2 ))
     BG_store.blit(store_window,store_rect)
     running=True
@@ -67,17 +67,21 @@ def store () :
 def pause () :
     # i made this because we drawing frames on other so when u clicked by accidant quit button and decide that u want back the effect of are_u_sure will be there
     my_surface= display_surface.copy() 
+    BG_check= pygame.Surface((w,h))
+    BG_check.fill("gray")
+    BG_check.set_alpha(50)
+    my_surface.blit(BG_check,(0,0))
     button_groups=pygame.sprite.Group()
-    resume_button=button(text_button="Resume", size=60 ,font_path=None,pos=(w/2,h/3), groups=button_groups)
-    back_to_main_button=button(text_button="Bcak to Main Menu", size=60 ,font_path=None,pos=(w/2,h/3*2), groups=button_groups)
+    resume_button=button(surface=pygame.image.load(r"attachment\resume_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\resume_button_pressed.png").convert_alpha(),pos=(640,280), groups=button_groups)
+    back_to_main_button=button(surface=pygame.image.load(r"attachment\back_MM_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_MM_button_pressed.png").convert_alpha(),pos=(640,420), groups=button_groups)
+    pause_window=pygame.image.load(r"attachment\pause_window.png").convert_alpha()
+    rect_pause_window=pause_window.get_frect(center=(w/2 , h/2))
     running=True
     while running :
         display_surface.blit(my_surface,(0 ,0))
         pygame.display.set_caption("pause")
-        BG_check= pygame.Surface((w,h))
-        BG_check.fill("gray")
-        BG_check.set_alpha(100)
-        display_surface.blit(BG_check,(0 ,0))
+        display_surface.blit(my_surface,(0 ,0))
+        display_surface.blit(pause_window,rect_pause_window)
         if back_to_main_button.clicked:
             check=are_u_sure()
             if not check:
@@ -90,12 +94,12 @@ def pause () :
         button_groups.update()
         pygame.display.update() 
 def are_u_sure () :
-    BG_check=pygame.image.load(r"game project\attachment\are_u_sure.png").convert_alpha()
+    BG_check=pygame.image.load(r"attachment\are_u_sure.png").convert_alpha()
     rect_BG_check=BG_check.get_frect(center=(w/2,h/2))
     # display_surface.blit(BG_check,rect_BG_check)
     button_groups=pygame.sprite.Group()
-    yes_button=button(surface=pygame.image.load(r"game project\attachment\yes_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\yes_button_pressed.png").convert_alpha(),pos=((w/2)+100,h/2), groups=button_groups)
-    no_button=button(surface=pygame.image.load(r"game project\attachment\no_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\no_button_pressed.png").convert_alpha(),pos=((w/2)-100,h/2), groups=button_groups)
+    yes_button=button(surface=pygame.image.load(r"attachment\yes_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\yes_button_pressed.png").convert_alpha(),pos=((w/2)+100,h/2), groups=button_groups)
+    no_button=button(surface=pygame.image.load(r"attachment\no_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\no_button_pressed.png").convert_alpha(),pos=((w/2)-100,h/2), groups=button_groups)
     running=True
     while running :
         display_surface.blit(BG_check,rect_BG_check)
@@ -118,10 +122,10 @@ if __name__ =="__main__" :
     h= 720
     display_surface = pygame.display.set_mode((w , h))
     button_groups=pygame.sprite.Group()
-    play_button=button(surface=pygame.image.load(r"game project\attachment\play_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\play_button_preessed.png").convert_alpha(),pos=(200,330), groups=button_groups)
-    store_button=button(surface=pygame.image.load(r"game project\attachment\store_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\store_button_pressed.png").convert_alpha(),pos=(180,420), groups=button_groups)
-    quit_button =button(surface=pygame.image.load(r"game project\attachment\quit_button.png").convert_alpha(),hover_surface=pygame.image.load(r"game project\attachment\quit_button_pressed.png").convert_alpha(),pos=(160,500), groups=button_groups)
-    BG_MM=pygame.image.load(r"game project\attachment\BG_MM.png").convert_alpha()
+    play_button=button(surface=pygame.image.load(r"attachment\play_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\play_button_preessed.png").convert_alpha(),pos=(200,330), groups=button_groups)
+    store_button=button(surface=pygame.image.load(r"attachment\store_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\store_button_pressed.png").convert_alpha(),pos=(180,420), groups=button_groups)
+    quit_button =button(surface=pygame.image.load(r"attachment\quit_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\quit_button_pressed.png").convert_alpha(),pos=(160,500), groups=button_groups)
+    BG_MM=pygame.image.load(r"attachment\BG_MM.png").convert_alpha()
     running_main=True
     while running_main :
         pygame.display.set_caption("Main Menu")
