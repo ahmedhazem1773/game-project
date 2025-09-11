@@ -1,5 +1,6 @@
 import pygame
 import random 
+import Main_window
 
 class Player(pygame.sprite.Sprite):
     def __init__(self,groups,width,hight): 
@@ -74,7 +75,7 @@ class Wipons(pygame.sprite.Sprite):
     def __init__(self,player,groups,width,hight):
         super().__init__(groups)
         self.image=pygame.Surface((10,10))
-        self.image.fill((169,169,169))
+        self.image.fill((255,0,0))
         self.rect=self.image.get_rect(midleft = player.rect.midright)
         self.speed = 2000
         self.direction = pygame.Vector2(1,0)
@@ -163,6 +164,7 @@ def start_game():
     w_width,w_hight = 1280,720 #window width and hight
     display_surface = pygame.display.set_mode((w_width,w_hight))
     pygame.display.set_caption("first prototype")
+    play_board=pygame.image.load(r"attachment\play_board.png").convert_alpha()
     #groups
     all_sprites = pygame.sprite.Group()
     obstacles = pygame.sprite.Group()
@@ -195,7 +197,8 @@ def start_game():
                     if now - last_shoot_time > time_delay:
                         shoot = Wipons(player,[all_sprites,shoots],w_width,w_hight) 
                         last_shoot_time = now
-                
+                if event.key == pygame.K_ESCAPE:
+                    running= Main_window.pause(display_surface, w_width,w_hight)
             if event.type == obstacle_event:
                 chance = random. randint(0,3) #random generator to detect the type of obstacle that will be generated every single event , 50% chance to generate one obstacle
                 if chance == 3:
@@ -217,7 +220,7 @@ def start_game():
         #update score
         score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
         #update and display screen    
-        display_surface.fill((255,255,153)) 
+        display_surface.blit(play_board, (0,0))
         all_sprites.draw(display_surface)
         score.draw_score()
         all_sprites.update(dt)
