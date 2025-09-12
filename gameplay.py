@@ -1,7 +1,7 @@
 import pygame
 import random 
 import Main_window
-
+import json
 class Player(pygame.sprite.Sprite):
     def __init__(self,groups,width,hight): 
         super().__init__(groups)
@@ -68,8 +68,12 @@ class Obstacle(pygame.sprite.Sprite):
         self.rect.x += self.direction.x*self.x_speed*dt    
         self.rect.y += self.direction.y*self.y_speed*dt      
         #the obstacle dissapper when get out of the screen        
+    def check_passing_screen(self):
         if self.rect.x <-100:
-            self.kill()    
+            self.kill()
+            return True
+        else : 
+            False    
 
 class Wipons(pygame.sprite.Sprite):
     def __init__(self,player,groups,width,hight):
@@ -107,9 +111,10 @@ class Collisions:
             for bullet,obstacles in hits.items():
                 pos = obstacles[0].rect.center
                 float_text = Floating_text("+5",pos,all_sprites) #display +5 score when bullet collide to obstacle
+            return True
         else :     
             self.hit=0
-        return 0
+        return False
     
 class Score_counter:
     def __init__(self,width,hight,surf):
@@ -118,19 +123,19 @@ class Score_counter:
         self.hit_score=[] 
         self.w_width = width
         self.w_hight = hight
+        self.board_counter=pygame.image.load(r"attachment\empty_window_show_score.png").convert_alpha()
+        self.rect_board_counter=self.board_counter.get_rect(center = (self.w_width//2,self.w_hight-self.w_hight//8))
         self.display_surface = surf
 
     def update_score(self,hit):
+        self.display_surface.blit(self.board_counter ,self.rect_board_counter)
         self.time_score = pygame.time.get_ticks()//500  #score increase by 2 every second
         self.hit_score.append(1) if hit else 0
-        self.total_score = self.time_score + len(self.hit_score)*5  #score increase by 5 every correct hit
-
-    def draw_score(self):   
-        font = pygame.font.Font(None,80)
-        score_text = font.render(f"{self.total_score}",True,(200,200,200))
-        text_rect = score_text.get_rect(center = (self.w_width//2,self.w_hight-self.w_hight//6))
-        text_box = text_rect.inflate(15,10)
-        pygame.draw.rect(self.display_surface,(200,200,200),text_box,5,border_radius=10)
+        self.total_score =len(self.hit_score)*5  #score increase by 5 every correct hit
+        # i made 2 func in 1 instead of calling twice
+        font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",50)
+        score_text = font.render(f"{self.total_score}",True,(221,243,231))
+        text_rect = score_text.get_rect(center = (self.w_width//2,self.w_hight-self.w_hight//8))
         self.display_surface.blit(score_text,text_rect) # display the score within a rectangle
 
 class Floating_text(pygame.sprite.Sprite): #display floating text
@@ -149,16 +154,33 @@ class Floating_text(pygame.sprite.Sprite): #display floating text
         if self.lifetime < 1:
             self.kill()
         
-def end_game(display_surface,w_width,w_hight):
-    font = pygame.font.SysFont(None,180,True)
-    game_over_text = font.render("GAME OVER",True,(50,205,50)) 
-    text_rect = game_over_text.get_rect(center = (w_width//2,w_hight//2))
-    display_surface.blit(game_over_text,text_rect)
-    pygame.display.update()
-    pygame.time.delay(3000)  
+def end_game(display_surface,w_width,w_hight, score):
+    font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.ttf", 60)
+    game_over_window=pygame.image.load(r"attachment\gawme_over_window.png").convert_alpha()
+    rect_game_over=game_over_window.get_frect(center =(w_width/2,w_hight/2))
+    showing_the_score= font.render(f"your score is : {score}",True,(221,243,231)) 
+    text_rect = showing_the_score.get_rect(center = (w_width//2,250))
+    button_groups=pygame.sprite.Group()
+    play_again_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\play_again_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\play_again_button_pressed.png").convert_alpha(),pos=(800,400), groups=button_groups)
+    back_MM_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\back_MM_inverted_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_MM_inverted_button_pressed.png").convert_alpha(),pos=(500,400), groups=button_groups)
+    running = True
+    while running :
+        display_surface.blit(game_over_window,rect_game_over)
+        display_surface.blit(showing_the_score,text_rect)
+        if play_again_button.clicked :
+            return True , score
+        elif back_MM_button.clicked :
+            running=False
+            return False , score
+        for event in pygame.event.get() :
+            if event.type == pygame.QUIT : 
+                running=False
+                return False , score
+        button_groups.update()
+        pygame.display.update()
+        
 
 def start_game():
-
     #pygame.init() >>> not needed , already called in the menu module
     #screen initialization
     w_width,w_hight = 1280,720 #window width and hight
@@ -176,13 +198,16 @@ def start_game():
     #events
     obstacle_event = pygame.event.custom_type()
     pygame.time.set_timer(obstacle_event,300)
+    num_in_wave=1 
+    num_created=0
+    all_dead=0
     #other parameters
     last_shoot_time=0
     time_delay=500 #delay between every single shoot
     clock = pygame.time.Clock()
     FPS = 120
     running = True
-
+    pause_checker = False
     while running:
         #delta time 
         dt = clock.tick(FPS)/1000
@@ -198,31 +223,38 @@ def start_game():
                         shoot = Wipons(player,[all_sprites,shoots],w_width,w_hight) 
                         last_shoot_time = now
                 if event.key == pygame.K_ESCAPE:
+                    pause_checker = True
                     running= Main_window.pause(display_surface, w_width,w_hight)
-            if event.type == obstacle_event:
-                chance = random. randint(0,3) #random generator to detect the type of obstacle that will be generated every single event , 50% chance to generate one obstacle
-                if chance == 3:
-                    y_speed = 300
-                    obstacle2 = Obstacle([all_sprites,obstacles],None,y_speed,2,w_width,w_hight)
-                elif chance : 
-                    obstacle = Obstacle([all_sprites,obstacles],None,None,1,w_width,w_hight)
-                else :
-                    obstacle = Obstacle([all_sprites,obstacles],None,None,1,w_width,w_hight)   
-                    y2 = obstacle.y_pos+random.randint(100,400) #the distance between the two obstacles
-                    y2 = obstacle.check_y2(y2)  
-                    obstacle = Obstacle([all_sprites,obstacles],y2,None,1,w_width,w_hight)
+                    pause_checker = False
+        if num_created < num_in_wave  :
+            chance = random. randint(0,3) #random generator to detect the type of obstacle that will be generated every single event , 50% chance to generate one obstacle
+            if chance == 3:
+                y_speed = 300
+                obstacle2 = Obstacle([all_sprites,obstacles],None,y_speed,2,w_width,w_hight)
+            elif chance : 
+                obstacle = Obstacle([all_sprites,obstacles],None,None,1,w_width,w_hight)
+            else :
+                obstacle = Obstacle([all_sprites,obstacles],None,None,1,w_width,w_hight)   
+                y2 = obstacle.y_pos+random.randint(100,400) #the distance between the two obstacles
+                y2 = obstacle.check_y2(y2)  
+                obstacle = Obstacle([all_sprites,obstacles],y2,None,1,w_width,w_hight)
         #collisions
         if collisions.check_collisions():
-            end_game(display_surface,w_width,w_hight)
-            running=0
-            continue 
-        collisions.bullet_collision(all_sprites)
-        #update score
-        score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
+            checker=end_game(display_surface,w_width,w_hight , score.total_score)
+            return checker
+        checker_for_killed_enemy =collisions.bullet_collision(all_sprites)
+        if checker_for_killed_enemy or any( obs.check_passing_screen() for obs in obstacles) :
+            all_dead +=1
+        if all_dead ==num_in_wave :
+            all_dead=0
+            num_created = 0 
+        elif num_created < num_in_wave :
+            num_created += 1
         #update and display screen    
         display_surface.blit(play_board, (0,0))
         all_sprites.draw(display_surface)
-        score.draw_score()
+        #update score
+        score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
         all_sprites.update(dt)
         pygame.display.update()
 

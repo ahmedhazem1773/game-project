@@ -1,11 +1,13 @@
 import pygame
 import random
 import gameplay
+import json
 class button (pygame.sprite.Sprite) :
     def __init__(self,pos,display_surface, text_button=None, size=None ,font_path=None,color="white", surface=False ,hover_surface=False,bg_color=None, groups=None):
         super().__init__(groups)
         #check if there surface or will creat one form a text
         self.checking_surface = False
+        # for general surface or image it is visual layer u see but rect it is a invisible rectangle known its points to use for format or collosions 
         if surface :
             self.image= surface
             self.hover_surface= hover_surface
@@ -19,16 +21,16 @@ class button (pygame.sprite.Sprite) :
         self.has_border=False
         self.clicked=False #this is to check if the button clicked or not 
         self.display_surface= display_surface
-        self.display_surface.blit(self.image, self.rect)
+        self.display_surface.blit(self.image, self.rect) #blit methode to put layer argyment on layer variable
     def make_borders(self, surface_display ,thickness=0 ,color="white", border_radius=-1) :
         self.has_border=pygame.draw.rect(surface_display ,color , self.rect.inflate(5*thickness, (3.75*thickness) + 15) ,thickness ,border_radius)
-    def check_input(self, click):
+    def check_input(self, click): #check is it clicked or not 
         self.clicked=click
-    def update(self, *args, **kwargs):
+    def update(self, *args, **kwargs): #this for updating state of the any spirit becaue it are frames that drwan frame by frame 
         mouse_position= pygame.mouse.get_pos()
-        if self.has_border: #because i want to cober the border also when i hover but it has a bigger rect 
+        if self.has_border: #because i want to cover the border also when i hover but it has a bigger rect 
                 self.rect_collosion = self.has_border
-        if self.rect_collosion.collidepoint(mouse_position):
+        if self.rect_collosion.collidepoint(mouse_position):# checking if mouse im area of button to make hover
             if self.checking_surface:
                 self.display_surface.blit(self.hover_surface , self.rect)
                 self.check_input(click= pygame.mouse.get_just_pressed()[0])
@@ -42,10 +44,15 @@ class button (pygame.sprite.Sprite) :
                 self.display_surface.blit(darkening_surface,dark_rect)
                 self.check_input(click= pygame.mouse.get_just_pressed()[0])
         else :
+            #for return the button like before
             self.clicked=False
             self.display_surface.blit(self.image, self.rect)
 def store () :
-    button_groups=pygame.sprite.Group()
+    font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
+    coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
+    rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
+    #spirit its a class but with common init attribute like surface and rect
+    button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
     back_button=button( display_surface=display_surface,surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=(w_width/2,w_hight-120), groups=button_groups)
     buy_button_1=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(630,440), groups=button_groups)
     buy_button_2=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(415,440), groups=button_groups)
@@ -56,9 +63,12 @@ def store () :
     BG_store.blit(store_window,store_rect)
     running=True
     while running :
+        coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
         pygame.display.set_caption("Store")
         display_surface.fill("black")
         display_surface.blit(BG_store, (0,0))
+        display_surface.blit(label_coins,rect_label_coins)
+        display_surface.blit(coin_text,rect_coin_text)
         if back_button.clicked:
             running=False
         for event in pygame.event.get() :
@@ -74,7 +84,7 @@ def pause (display_surface , w_width,w_hight) :
     my_surface= display_surface.copy() 
     BG_check= pygame.Surface((w_width,w_hight))
     BG_check.fill("gray")
-    BG_check.set_alpha(50)
+    BG_check.set_alpha(80)
     my_surface.blit(BG_check,(0,0))
     button_groups=pygame.sprite.Group()
     resume_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\resume_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\resume_button_pressed.png").convert_alpha(),pos=(640,280), groups=button_groups)
@@ -85,7 +95,6 @@ def pause (display_surface , w_width,w_hight) :
     while running :
         display_surface.blit(my_surface,(0 ,0))
         pygame.display.set_caption("pause")
-        display_surface.blit(my_surface,(0 ,0))
         display_surface.blit(pause_window,rect_pause_window)
         if back_to_main_button.clicked:
             check=are_u_sure(display_surface , w_width,w_hight)
@@ -129,19 +138,39 @@ if __name__ =="__main__" :
     pygame.init()
     w_width= 1280 
     w_hight= 720
+    #this is for the data file
+    try :
+        with open(r"data\coins.txt") as coin_file :
+            my_coins=json.load(coin_file)
+    except:
+        my_coins={"coins":0}
+    font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
+    coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
+    rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
     display_surface = pygame.display.set_mode((w_width,w_hight))
     button_groups=pygame.sprite.Group()
     play_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\play_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\play_button_preessed.png").convert_alpha(),pos=(200,330), groups=button_groups)
     store_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\store_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\store_button_pressed.png").convert_alpha(),pos=(180,420), groups=button_groups)
     quit_button =button(display_surface=display_surface,surface=pygame.image.load(r"attachment\quit_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\quit_button_pressed.png").convert_alpha(),pos=(160,500), groups=button_groups)
     BG_MM=pygame.image.load(r"attachment\BG_MM.png").convert_alpha()
+    label_coins=pygame.image.load(r"attachment\empty_window_show_coins.png").convert_alpha()
+    rect_label_coins=label_coins.get_frect(center=(w_width-120,50))
     running_main=True
+    play_again=True
     while running_main :
         pygame.display.set_caption("Main Menu")
+        coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
         display_surface.fill("black")
         display_surface.blit(BG_MM, (0,0))
+        display_surface.blit(label_coins,rect_label_coins)
+        display_surface.blit(coin_text,rect_coin_text)
         if play_button.clicked:
-            gameplay.start_game()
+            while play_again:
+                play_again , score=gameplay.start_game()
+                my_coins["coins"] +=score
+                with open(r"data\coins.txt", "w") as coin_file :
+                    json.dump(my_coins, coin_file , indent=4)
+            play_again= True
         elif store_button.clicked :
             store()
         elif quit_button.clicked:
