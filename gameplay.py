@@ -1,7 +1,6 @@
 import pygame
 import random 
 import Main_window
-import json
 class Player(pygame.sprite.Sprite):
     def __init__(self,groups,width,hight): 
         super().__init__(groups)
@@ -13,7 +12,6 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midleft =(0,self.w_hight//2)) 
         self.direction = pygame.Vector2(0,0) 
         self.speed = 800
-
 
     def update(self,dt):
         keys = pygame.key.get_pressed()
@@ -34,11 +32,10 @@ class Obstacle(pygame.sprite.Sprite):
         super().__init__(groups)
         #initialize the obstacle size,color,speed and direction.
         o_width , o_hight =70,70  #obstacle width and hight
-        self.image = pygame.Surface((o_width,o_hight))
         if obstacle_type == 1:
-            self.image.fill((0,0,0))
+            self.image=pygame.image.load(r"C:\Users\EG.LAPTOP\Downloads\small_version3.png").convert_alpha()
         elif obstacle_type == 2 :
-            self.image.fill((255,0,0))    
+            self.image=pygame.image.load(r"C:\Users\EG.LAPTOP\Downloads\small_version_bee.png").convert_alpha()  
         self.w_width = width
         self.w_hight = hight            
         if y_pos == None:
@@ -57,7 +54,7 @@ class Obstacle(pygame.sprite.Sprite):
             y2=self.w_hight 
         return y2           
 
-    def update(self,dt):
+    def update(self,dt ):
         #when obstacle hit the top or bottom of the screen , it bounces and changes its direction.
         if self.rect.top <= 0:
             self.rect.top = 0 #that fixed some bugs here 
@@ -65,9 +62,9 @@ class Obstacle(pygame.sprite.Sprite):
         if self.rect.bottom >= self.w_hight:
             self.rect.bottom = self.w_hight
             self.direction.y*=-1
-        self.rect.x += self.direction.x*self.x_speed*dt    
-        self.rect.y += self.direction.y*self.y_speed*dt      
-        #the obstacle dissapper when get out of the screen        
+        self.rect.x += self.direction.x*self.x_speed* dt
+        self.rect.y += self.direction.y*self.y_speed* dt     
+        #the obstacle dissapper when get out of the screen and seperate it for my waves of enemy to increase numbers of enemy in the wave        
     def check_passing_screen(self):
         if self.rect.x <-100:
             self.kill()
@@ -100,7 +97,7 @@ class Collisions:
         self.hit=0 #if an collision occur between a bullet and an obstacle >> hit=1 >> score increase
 
     def check_collisions(self): #check if player collide to an obstacle
-        if pygame.sprite.spritecollide(self.player,self.obstacles,False):
+        if pygame.sprite.spritecollide(self.player,self.obstacles,pygame.sprite.collide_mask):
             return True
         return False
     
@@ -111,10 +108,10 @@ class Collisions:
             for bullet,obstacles in hits.items():
                 pos = obstacles[0].rect.center
                 float_text = Floating_text("+5",pos,all_sprites) #display +5 score when bullet collide to obstacle
-            return True
+            return True #it for my waves of enemy to increase numbers of enemy in the wave
         else :     
             self.hit=0
-        return False
+        return False #it for my waves of enemy to increase numbers of enemy in the wave
     
 class Score_counter:
     def __init__(self,width,hight,surf):
@@ -195,9 +192,10 @@ def start_game():
     player = Player(all_sprites,w_width,w_hight)
     collisions=Collisions(player,obstacles,shoots)
     score = Score_counter(w_width,w_hight,display_surface)
-    #events
+    #your old spawn obsctale don't needed delete it
     obstacle_event = pygame.event.custom_type()
     pygame.time.set_timer(obstacle_event,300)
+    #those for my waves to increase smothly in number of enemy in one wave
     num_in_wave=1 
     num_created=0
     all_dead=0
@@ -207,7 +205,7 @@ def start_game():
     clock = pygame.time.Clock()
     FPS = 120
     running = True
-    pause_checker = False
+    puase_checker= False
     while running:
         #delta time 
         dt = clock.tick(FPS)/1000
@@ -215,7 +213,7 @@ def start_game():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
+                return False,0 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE :
                     now = pygame.time.get_ticks()
@@ -223,10 +221,10 @@ def start_game():
                         shoot = Wipons(player,[all_sprites,shoots],w_width,w_hight) 
                         last_shoot_time = now
                 if event.key == pygame.K_ESCAPE:
-                    pause_checker = True
                     running= Main_window.pause(display_surface, w_width,w_hight)
-                    pause_checker = False
-        if num_created < num_in_wave  :
+                    if not running :
+                        return False,0 
+        if num_created < num_in_wave  : # it for creat enemys untel reach the max number in the and don't others untel all enemies in brevious wave dead
             chance = random. randint(0,3) #random generator to detect the type of obstacle that will be generated every single event , 50% chance to generate one obstacle
             if chance == 3:
                 y_speed = 300
@@ -243,7 +241,7 @@ def start_game():
             checker=end_game(display_surface,w_width,w_hight , score.total_score)
             return checker
         checker_for_killed_enemy =collisions.bullet_collision(all_sprites)
-        if checker_for_killed_enemy or any( obs.check_passing_screen() for obs in obstacles) :
+        if checker_for_killed_enemy or any( obs.check_passing_screen() for obs in obstacles) : # to count for obscals that are  dead or pass 
             all_dead +=1
         if all_dead ==num_in_wave :
             all_dead=0
