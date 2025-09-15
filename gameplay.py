@@ -3,6 +3,7 @@ import random
 import Main_window
 import hand_tracking as ht
 import cv2
+
 class Player(pygame.sprite.Sprite):
     def __init__(self,groups,width,hight): 
         super().__init__(groups)
@@ -26,13 +27,13 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(midright =(self.w_width,self.w_hight//2)) 
         self.direction = pygame.Vector2(0,0) 
         self.speed = 500
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self,dt , move=0):
-        keys = pygame.key.get_pressed()
         self.direction.y=0  
-        if keys[pygame.K_UP] or move==1:
+        if move==1:
             self.direction.y=-1
-        if keys[pygame.K_DOWN] or move==-1:  
+        if move==-1:  
             self.direction.y=1     
         self.rect.y += self.direction.y*self.speed*dt  #the player only move verticaly     
         #the player must be within the window.
@@ -41,13 +42,13 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom>self.w_hight:
             self.rect.bottom=self.w_hight
         self.image, self.i = animat(dt,self.surfaces,self.i) 
+        self.mask=pygame.mask.from_surface(self.image)
         
-
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self,groups,y_pos,y_speed,obstacle_type,width,hight):   #y_pos is the vertical position for the obstacle #y_speed is the speed in y axis 
         super().__init__(groups)
         #initialize the obstacle size,color,speed and direction.
-        o_width , o_hight =70,70  #obstacle width and hight
+        o_width , o_hight =64,64  #obstacle width and hight
         self.image = pygame.Surface((o_width,o_hight))
         if obstacle_type == 1:
             sheet_bug=pygame.image.load(r"attachment\Scorpion.png").convert_alpha()
@@ -70,7 +71,7 @@ class Obstacle(pygame.sprite.Sprite):
             y_speed = 0           
         self.y_speed = y_speed
         self.direction = pygame.Vector2(1,random.choice([-1,1])) #obstacle move to lift with random vertical initial direction 
-
+        self.mask = pygame.mask.from_surface(self.image)
 
     def check_y2(self,y2):  #check if y2 is not on the screen 
         if y2 > self.w_hight:    #y2 is the vertical coordinate for the second obstacle (if two obstacles get generated together)
@@ -87,11 +88,13 @@ class Obstacle(pygame.sprite.Sprite):
             self.direction.y*=-1
         self.rect.x += self.direction.x*self.x_speed* dt
         self.rect.y += self.direction.y*self.y_speed* dt 
-        self.image, self.i = animat(dt,self.surfaces_bug,self.i)    
+        self.image, self.i = animat(dt,self.surfaces_bug,self.i)  
+        self.mask = pygame.mask.from_threshold(self.image,(0,0,0,255),(50,50,50,255))
+  
         #the obstacle dissapper when get out of the screen and seperate it for my waves of enemy to increase numbers of enemy in the wave 
                
     def check_passing_screen(self):
-        if self.rect.x > self.w_width-65:
+        if self.rect.right >= self.w_width:
             self.kill()
             return True
         else : 
@@ -124,9 +127,17 @@ class Collisions:
         self.hit=0 #if an collision occur between a bullet and an obstacle >> hit=1 >> score increase
 
     def check_collisions(self): #check if player collide to an obstacle
-        if pygame.sprite.spritecollide(self.player,self.obstacles,pygame.sprite.collide_mask):
-            return True
-        return False
+       for obs in self.obstacles:
+           dx = self.player.rect.centerx - obs.rect.centerx
+           dy = self.player.rect.centery - obs.rect.centery
+           d = (dx**2 + dy**2)**0.5 #distance
+           collision_radius = 50 #this number represent the min distance between the player and obstacle before git collision
+           if d<collision_radius :
+               return True
+           else:
+               return False
+
+
     
     def bullet_collision(self,all_sprites): #check if bullet collide to an obstacle
         hits = pygame.sprite.groupcollide(self.shoots,self.obstacles,True,True) #if no collision happened , hits equal to zero
@@ -166,7 +177,7 @@ class Floating_text(pygame.sprite.Sprite): #display floating text
     def __init__(self,text,pos,groups):
         super().__init__(groups)
         font = pygame.font.Font(None,40)
-        self.image = font.render(text,True,(150,150,150))
+        self.image = font.render(text,True,(255,80,80))
         self.rect = self.image.get_rect(center = pos)
         self.lifetime = 60
 
@@ -234,6 +245,7 @@ def shooting(time_delay,last_shoot_time,player,group1,group2,surfaces_bullets):
         Wipons(player,[group1,group2],player.w_width,player.w_hight , surfaces_bullets) 
         last_shoot_time = now
     return last_shoot_time 
+
 def creat_animation (num_frames ,size, row , surface_sheet, flip=False,factor_scale=False) :
     surface_animation=[]
     for i in range(num_frames ) :
@@ -245,6 +257,7 @@ def creat_animation (num_frames ,size, row , surface_sheet, flip=False,factor_sc
             bug=pygame.transform.scale(bug,(64*factor_scale,64*factor_scale))
         surface_animation.append(bug)
     return surface_animation
+
 def animat (dt ,surfaces, i) :
     i += 20*dt
     surface=surfaces[int(i) % len(surfaces)]
@@ -285,7 +298,8 @@ def process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight):
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
         if cv2.waitKey(1) & 0xFF == 27:
             break
-        return display_frame,stop,shoot,gesture       
+        return display_frame,stop,shoot,gesture   
+        
 def start_game(cap):
     #pygame.init() >>> not needed , already called in the menu module
     #screen initialization
@@ -337,7 +351,7 @@ def start_game(cap):
                     if now - last_shoot_time > time_delay:
                         shoot = Wipons(player,[all_sprites,shoots],w_width,w_hight,surfaces_bullets) 
                         last_shoot_time = now
-                if event.key == pygame.K_ESCAPE or pause:
+                if event.key == pygame.K_ESCAPE:
                     running= Main_window.pause(display_surface, w_width,w_hight,cap)
                     if not running :
                         return False,0 
@@ -352,13 +366,18 @@ def start_game(cap):
                 obstacle = Obstacle([all_sprites,obstacles],None,None,1,w_width-320,w_hight)   
                 y2 = obstacle.y_pos+random.randint(100,400) #the distance between the two obstacles
                 y2 = obstacle.check_y2(y2)  
-                obstacle = Obstacle([all_sprites,obstacles],y2,None,1,w_width,w_hight)
+                obstacle = Obstacle([all_sprites,obstacles],y2,None,1,w_width-320,w_hight)
         if fire:
             last_shoot_time = shooting(time_delay,last_shoot_time,player,all_sprites,shoots , surfaces_bullets)
         #player moving
-        player.update(dt,move) 
+        player.update(dt,move)
+        #pause
+        if pause:
+            running= Main_window.pause(display_surface, w_width,w_hight,cap)
+            if not running :
+                return False,0 
         #collisions
-        if collisions.check_collisions()   :
+        if collisions.check_collisions():
             checker=end_game(display_surface,w_width,w_hight , score.total_score,cap)
             return checker
         checker_for_killed_enemy =collisions.bullet_collision(all_sprites)
@@ -372,14 +391,15 @@ def start_game(cap):
         #update and display screen
         display_surface.blit(player_back,(1030,-20))    
         display_surface.blit(play_board, (-240,0))
-        all_sprites.draw(display_surface)
         #display frame
         frame_surface = pygame.surfarray.make_surface(frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         display_surface.blit(frame_surface,(w_width-305,w_hight-230))
         #update score
         score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
+        #update and display sprites
         all_sprites.update(dt)
+        all_sprites.draw(display_surface)
         pygame.display.update()
 
 #pygame.quit() >>> not needed , already called in the menu module

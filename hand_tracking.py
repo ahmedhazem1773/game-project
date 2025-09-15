@@ -9,7 +9,7 @@ def hand_gestures(landmarks,tol=.002): #this class track finger landmarks to det
     thump_tip = landmarks.landmark[4]
     index_finger_tip = landmarks.landmark[8]
 
-    if abs(thump_tip.y-min_y)>=tol:
+    if abs(thump_tip.y-min_y)<=tol:
         gesture=1
     elif abs(thump_tip.y-max_y)<=tol:   
         gesture=-1
