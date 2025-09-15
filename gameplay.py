@@ -333,11 +333,14 @@ def start_game(cap):
     clock = pygame.time.Clock()
     FPS = 60
     running = True
-    puase_checker= False
+    just_unpaused = False
     y_speed=300
     while running:
         #delta time 
         dt = clock.tick(FPS)/1000
+        if just_unpaused and dt > 0.06:  # Skip large dt after unpause
+            dt = 0
+            just_unpaused = False
         ###########
         frame,move,fire,pause = controller(mp_hands,hands,mp_draw,cap,300,220)
         #events
@@ -353,6 +356,7 @@ def start_game(cap):
                         last_shoot_time = now
                 if event.key == pygame.K_ESCAPE:
                     running= Main_window.pause(display_surface, w_width,w_hight,cap)
+                    just_unpaused = True
                     if not running :
                         return False,0 
         if num_created < num_in_wave  : # it for creat enemys untel reach the max number in the and don't others untel all enemies in brevious wave dead
@@ -374,6 +378,7 @@ def start_game(cap):
         #pause
         if pause:
             running= Main_window.pause(display_surface, w_width,w_hight,cap)
+            just_unpaused = True
             if not running :
                 return False,0 
         #collisions
@@ -395,11 +400,11 @@ def start_game(cap):
         frame_surface = pygame.surfarray.make_surface(frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         display_surface.blit(frame_surface,(w_width-305,w_hight-230))
-        #update score
-        score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
         #update and display sprites
         all_sprites.update(dt)
         all_sprites.draw(display_surface)
+        #update score
+        score.update_score(collisions.hit) #collisions.hit is 1 if a bullet hit an obstacle, else 0
         pygame.display.update()
 
 #pygame.quit() >>> not needed , already called in the menu module

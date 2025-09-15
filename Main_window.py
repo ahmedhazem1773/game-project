@@ -3,6 +3,7 @@ import random
 import gameplay
 import json
 import cv2
+#################this class for make a button wether u have a image or u will write 
 class button (pygame.sprite.Sprite) :
     def __init__(self,pos,display_surface, text_button=None, size=None ,font_path=None,color="white", surface=False ,hover_surface=False,bg_color=None, groups=None):
         super().__init__(groups)
@@ -48,9 +49,12 @@ class button (pygame.sprite.Sprite) :
             #for return the button like before
             self.clicked=False
             self.display_surface.blit(self.image, self.rect)
+######################################################
+#u will notice in most funcs that represent a windows i pass a cap object that response of capture the camera we made this to use one cap obj
+#to reduce the delay and any wasting processoring and the strem will mot walk smoth
 def store (cap) :
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
-    coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+    coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
     rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
     #spirit its a class but with common init attribute like surface and rect
     button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
@@ -67,7 +71,7 @@ def store (cap) :
         ret,frame=cap.read()
         display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
-        coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+        coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
         pygame.display.set_caption("Store")
         display_surface.fill("black")
         display_surface.blit(BG_store, (-10,0))
@@ -117,6 +121,9 @@ def pause (display_surface , w_width,w_hight,cap) :
                 return True #when u don't need this window it will return to the runnig variable of while loop of func play to continue playing
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    #this for issue because i use the same key in affect in the main loop so it seems like it gitting not unpaused
+                    while pygame.key.get_pressed()[pygame.K_ESCAPE]:
+                        pygame.event.pump()
                     return True
         frame_surface = pygame.surfarray.make_surface(display_frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
@@ -150,7 +157,7 @@ def are_u_sure (display_surface ,w_width,w_hight, cap) :
                     running=False
         frame_surface = pygame.surfarray.make_surface(display_frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
-        display_surface.blit(frame_surface,(w_width-305,w_hight-230))
+        display_surface.blit(frame_surface,(1055,w_hight-230))
         button_groups.update()
         pygame.display.update() 
 if __name__ =="__main__" :    
@@ -168,9 +175,9 @@ if __name__ =="__main__" :
         my_coins={"coins":0}
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
     font2=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",20)
-    coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+    coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
     ahmed= font2.render(f"made by :\nahmed hazem linkedin : www.linkedin.com/in/ahmed-hazem-7730262b9",True,(221,243,231))
-    abdo= font2.render(f"abdelrahman ehab linkedin : www.linkedin.com/in/abdelrahman-ehab-636275327",True,(221,243,231))
+    abdo= font2.render(f"abdulrahman ehab linkedin : www.linkedin.com/in/abdulrahman-ehab-636275327",True,(221,243,231))
     rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
     display_surface = pygame.display.set_mode((w_width,w_hight))
     button_groups=pygame.sprite.Group()
@@ -191,7 +198,7 @@ if __name__ =="__main__" :
         display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
         pygame.display.set_caption("Main Menu")
-        coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+        coin_text = font.render(f"your coins : {my_coins["coins"]}",True,(221,243,231))
         display_surface.fill("black")
         display_surface.blit(BG_MM, (0,0))
         display_surface.blit(label_coins,rect_label_coins)
