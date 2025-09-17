@@ -61,7 +61,7 @@ def store (cap) :
     back_button=button( display_surface=display_surface,surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=((w_width-250)/2,w_hight-120), groups=button_groups)
     buy_button_1=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(545,440), groups=button_groups)
     buy_button_2=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(330,440), groups=button_groups)
-    buy_button_2=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(750,440), groups=button_groups)
+    buy_button_3=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(750,440), groups=button_groups)
     store_window=pygame.image.load(r"attachment\store_window.png").convert_alpha()
     BG_store=pygame.image.load(r"attachment\general_BG.JPg").convert_alpha()
     store_rect=store_window.get_frect(center=((w_width-250)/2 ,w_hight/2 ))
