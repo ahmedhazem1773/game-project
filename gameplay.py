@@ -286,6 +286,9 @@ class Barriers(pygame.sprite.Sprite):
             self.rect.centerx = self.center_of_motion[0] + self.radius*math.cos(self.angle)
             self.rect.centery = self.center_of_motion[1] + self.radius*math.sin(self.angle)
 
+    def kill_barrier(self):
+        self.kill()        
+
 def end_game(display_surface,w_width,w_hight, score,cap):
     font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.ttf", 60)
     game_over_window=pygame.image.load(r"attachment\gawme_over_window.png").convert_alpha()
@@ -650,13 +653,18 @@ def pvp_mode(cap):
             player1_weapon+=1
             player2_weapon+=1
             who_won=0
+            for barrier in barriers_group:
+                barrier.kill_barrier()
             create_barriers=True
         elif who_won==2:
             p2_wins+=1
             round+=1
             player1_weapon+=1
             player2_weapon+=1 
-            who_won=0           
+            who_won=0       
+            for barrier in barriers_group:
+                barrier.kill_barrier()
+    
             create_barriers=True    
         if p1_wins==3:
             pass #function to end game and print player 1 wins!
