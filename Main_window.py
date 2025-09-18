@@ -49,21 +49,51 @@ class button (pygame.sprite.Sprite) :
             #for return the button like before
             self.clicked=False
             self.display_surface.blit(self.image, self.rect)
+class weapon ():
+    def __init__(self ,pos,groups, weapon_num, price,bought, equip):
+        self.equip=equip
+        self.bought=bought
+        self.button =button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=pos, groups=groups)
+        self.equip_button=pygame.image.load(r"attachment\equip_button.png").convert_alpha()
+        self.equip_button_pressed=pygame.image.load(r"attachment\equip_button_pressed.png").convert_alpha()
+        self.equiped_button=pygame.image.load(r"attachment\equiped_button.png").convert_alpha()
+        self.equiped_button_pressed=pygame.image.load(r"attachment\equiped_button_pressed.png").convert_alpha()
+        if self.bought:
+            if equip:
+                self.button.image=self.equiped_button
+                self.button.hover_surface=self.equiped_button_pressed
+            else :
+                self.button.image=self.equip_button
+                self.button.hover_surface=self.equip_button_pressed
+        self.weapon =weapon_num
+        self.price=price
+        self.equip=equip
+    def equip_func (self) :
+        if self.bought:
+            if self.equip:
+                self.button.image=self.equiped_button
+                self.button.hover_surface=self.equiped_button_pressed
+            else :
+                self.button.image=self.equip_button
+                self.button.hover_surface=self.equip_button_pressed
+
 ######################################################
 #u will notice in most funcs that represent a windows i pass a cap object that response of capture the camera we made this to use one cap obj
 #to reduce the delay and any wasting processoring and the strem will mot walk smoth
 def store (cap) :
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
-    coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+    coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))
     rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
     #spirit its a class but with common init attribute like surface and rect
     button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
     back_button=button( display_surface=display_surface,surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=((w_width-250)/2,w_hight-120), groups=button_groups)
-    buy_button_1=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(545,440), groups=button_groups)
-    buy_button_2=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(330,440), groups=button_groups)
-    buy_button_3=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(750,440), groups=button_groups)
-    store_window=pygame.image.load(r"attachment\store_window.png").convert_alpha()
-    BG_store=pygame.image.load(r"attachment\general_BG.JPg").convert_alpha()
+    # weapon_1_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(545,440), groups=button_groups)
+    weapon_0=weapon(pos=(232,440),groups=button_groups, weapon_num=1, price=0 , bought=my_data["weapon_0"]["bought"], equip=my_data["weapon_0"]["equip"])
+    weapon_1=weapon(pos=(442,440),groups=button_groups, weapon_num=1, price=300 , bought=my_data["weapon_1"]["bought"], equip=my_data["weapon_1"]["equip"])
+    weapon_2=weapon(pos=(652,440),groups=button_groups, weapon_num=2, price=400 , bought=my_data["weapon_2"]["bought"], equip=my_data["weapon_2"]["equip"])
+    weapon_3=weapon(pos=(860,440),groups=button_groups, weapon_num=3, price=500 , bought=my_data["weapon_3"]["bought"], equip=my_data["weapon_3"]["equip"])
+    store_window=pygame.image.load(r"C:\Users\EG.LAPTOP\Desktop\PNG\PNG\Asset 60.png").convert_alpha()
+    BG_store=pygame.image.load(r"attachment\general_BG.jPg").convert_alpha()
     store_rect=store_window.get_frect(center=((w_width-250)/2 ,w_hight/2 ))
     BG_store.blit(store_window,store_rect)
     running=True
@@ -71,19 +101,141 @@ def store (cap) :
         ret,frame=cap.read()
         display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
-        coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+        coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))
         pygame.display.set_caption("Store")
         display_surface.fill("black")
         display_surface.blit(BG_store, (-10,0))
         display_surface.blit(label_coins,rect_label_coins)
         display_surface.blit(coin_text,rect_coin_text)
         if back_button.clicked:
+            for key, value in my_data.items():
+                    if key.startswith("weapon_"):  # Only process weapon-related keys
+                            if value["equip"] == True:  # Check if equip is True
+                                my_data["selected_weapon"] = int(key[-1])  # Update selected_weapon with weapon index
+                                break  # Exit after finding the first equipped weapon
+            with open(r"data\data.txt", "w") as coin_file :
+                        json.dump(my_data, coin_file , indent=4)
             running=False
+        elif weapon_0.button.clicked :
+            if not weapon_0.equip:
+                weapon_0.equip=True
+                my_data["weapon_0"]["equip"]=True
+                weapon_0.equip_func()
+                weapon_1.equip=False
+                my_data["weapon_1"]["equip"]=False
+                weapon_1.equip_func()
+                weapon_2.equip=False
+                my_data["weapon_2"]["equip"]=False
+                weapon_2.equip_func()
+                weapon_3.equip=False
+                my_data["weapon_3"]["equip"]=False
+                weapon_3.equip_func()
+        elif weapon_1.button.clicked :
+            if weapon_1.bought :
+                if weapon_1.equip:
+                    weapon_1.equip=False
+                    my_data["weapon_1"]["equip"]=False
+                    weapon_1.equip_func()
+                    weapon_0.equip=True
+                    my_data["weapon_0"]["equip"]=True
+                    weapon_0.equip_func()
+                else:
+                    weapon_1.equip=True
+                    my_data["weapon_1"]["equip"]=True
+                    weapon_1.equip_func()
+                    weapon_0.equip=False
+                    my_data["weapon_0"]["equip"]=False
+                    weapon_0.equip_func()
+                    weapon_2.equip=False
+                    my_data["weapon_2"]["equip"]=False
+                    weapon_2.equip_func()
+                    weapon_3.equip=False
+                    my_data["weapon_3"]["equip"]=False
+                    weapon_3.equip_func()
+            else :
+                if my_data["coins"] >= weapon_1.price :
+                    my_data['coins'] -=weapon_1.price
+                    weapon_1.bought= True
+                    weapon_1.button.image=weapon_1.equip_button
+                    weapon_1.button.hover_surface=False
+                    my_data["weapon_1"]["bought"]=True
+        elif weapon_2.button.clicked :
+            if weapon_2.bought :
+                if weapon_2.equip:
+                    weapon_2.equip=False
+                    my_data["weapon_2"]["equip"]=False
+                    weapon_2.equip_func()
+                    weapon_0.equip=True
+                    my_data["weapon_0"]["equip"]=True
+                    weapon_0.equip_func()
+                else:
+                    weapon_2.equip=True
+                    my_data["weapon_2"]["equip"]=True
+                    weapon_2.equip_func()
+                    weapon_0.equip=False
+                    my_data["weapon_0"]["equip"]=False
+                    weapon_0.equip_func()
+                    weapon_1.equip=False
+                    my_data["weapon_1"]["equip"]=False
+                    weapon_1.equip_func()
+                    weapon_3.equip=False
+                    my_data["weapon_3"]["equip"]=False
+                    weapon_3.equip_func()
+            else :
+                if my_data["coins"] >= weapon_2.price :
+                    my_data['coins'] -=weapon_2.price
+                    weapon_2.bought= True
+                    weapon_2.button.image=weapon_2.equip_button
+                    weapon_2.button.hover_surface=False
+                    my_data["weapon_2"]["bought"]=True
+        elif weapon_3.button.clicked :
+            if weapon_3.bought :
+                if weapon_3.equip:
+                    weapon_3.equip=False
+                    my_data["weapon_3"]["equip"]=False
+                    weapon_3.equip_func()
+                    weapon_0.equip=True
+                    my_data["weapon_0"]["equip"]=True
+                    weapon_0.equip_func()
+                else:
+                    weapon_3.equip=True
+                    my_data["weapon_3"]["equip"]=True
+                    weapon_3.equip_func()
+                    weapon_0.equip=False
+                    my_data["weapon_0"]["equip"]=False
+                    weapon_0.equip_func()
+                    weapon_2.equip=False
+                    my_data["weapon_2"]["equip"]=False
+                    weapon_2.equip_func()
+                    weapon_1.equip=False
+                    my_data["weapon_1"]["equip"]=False
+                    weapon_1.equip_func()
+            else :
+                if my_data["coins"] >= weapon_3.price :
+                    my_data['coins'] -=weapon_3.price
+                    weapon_3.bought= True
+                    weapon_3.button.image=weapon_3.equip_button
+                    weapon_3.button.hover_surface=False
+                    my_data["weapon_3"]["bought"]=True
         for event in pygame.event.get() :
             if event.type == pygame.QUIT :
+                for key, value in my_data.items():
+                    if key.startswith("weapon_"):  # Only process weapon-related keys
+                            if value["equip"] == True:  # Check if equip is True
+                                my_data["selected_weapon"] = int(key[-1])  # Update selected_weapon with weapon index
+                                break  # Exit after finding the first equipped weapon
+                with open(r"data\data.txt", "w") as data_file :
+                        json.dump(my_data, data_file , indent=4)
                 running=False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    for key, value in my_data.items():
+                        if key.startswith("weapon_"):  # Only process weapon-related keys
+                                if value["equip"] == True:  # Check if equip is True
+                                    my_data["selected_weapon"] = int(key[-1])  # Update selected_weapon with weapon index
+                                    break  # Exit after finding the first equipped weapon
+                    with open(r"data\data.txt", "w") as data_file :
+                        json.dump(my_data, data_file , indent=4)
                     running=False
         frame_surface = pygame.surfarray.make_surface(display_frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
@@ -159,23 +311,55 @@ def are_u_sure (display_surface ,w_width,w_hight, cap) :
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         display_surface.blit(frame_surface,(1055,w_hight-230))
         button_groups.update()
+        pygame.display.update()
+def game_mode(cap) :
+    my_surface= display_surface.copy() 
+    button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
+    pvp_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\pvp_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\pvp_button_pressed.png").convert_alpha(),pos=((w_width/2),300), groups=button_groups)
+    normal_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\normal_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\normal_button_pressed.png").convert_alpha(),pos=((w_width/2),370), groups=button_groups)
+    back_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\back_GM_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_GM_button_pressed.png").convert_alpha(),pos=((w_width/2),450), groups=button_groups)
+    mode_window=pygame.image.load(r"attachment\game_mode_window.png").convert_alpha()
+    mode_rect=mode_window.get_frect(center=(w_width/2 ,w_hight/2 ))
+    running=True
+    while running :
+        ret,frame=cap.read()
+        display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
+        display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
+        pygame.display.set_caption("mode")
+        display_surface.fill("black")
+        display_surface.blit(my_surface, (0,0))
+        display_surface.blit(mode_window,mode_rect)
+        if back_button.clicked:
+            return False,None
+        elif normal_button.clicked :
+            return True , 0
+        elif pvp_button.clicked:
+            return True , 1
+        for event in pygame.event.get() :
+            if event.type == pygame.QUIT :
+                return False , None
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return False , None 
+        frame_surface = pygame.surfarray.make_surface(display_frame)
+        frame_surface = pygame.transform.rotate(frame_surface,-90)
+        display_surface.blit(frame_surface,(w_width-305,w_hight-230))
+        button_groups.update()
         pygame.display.update() 
 if __name__ =="__main__" :    
     pygame.init()
-    # w_width= 1280 
-    # w_hight= 720
     w_width,w_hight = 1360,720 #window width and hight
     # c_width,c_hight = 300,220 #camera width and hight
     display_surface = pygame.display.set_mode((w_width,w_hight))
     #this is for the data file
     try :
-        with open(r"data\coins.txt") as coin_file :
-            my_coins=json.load(coin_file)
+        with open(r"data\data.txt") as data_file :
+            my_data=json.load(data_file)
     except:
-        my_coins={'coins':0}
+        my_data = {"coins": 0,"weapon_0":{"bought":True , "equip":True},"weapon_1":{"bought":False , "equip":False},"weapon_2":{"bought":False , "equip":False},"weapon_3":{"bought":False , "equip":False},"selected_weapon":0}
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
     font2=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",20)
-    coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+    coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))
     ahmed= font2.render(f"made by :\nahmed hazem linkedin : www.linkedin.com/in/ahmed-hazem-7730262b9",True,(221,243,231))
     abdo= font2.render(f"abdelrahman ehab linkedin : www.linkedin.com/in/abdelrahman-ehab-636275327",True,(221,243,231))
     rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
@@ -198,7 +382,7 @@ if __name__ =="__main__" :
         display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
         pygame.display.set_caption("Main Menu")
-        coin_text = font.render(f"your coins : {my_coins['coins']}",True,(221,243,231))
+        coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))
         display_surface.fill("black")
         display_surface.blit(BG_MM, (0,0))
         display_surface.blit(label_coins,rect_label_coins)
@@ -206,13 +390,19 @@ if __name__ =="__main__" :
         display_surface.blit(ahmed,(50,650))
         display_surface.blit(abdo,(50,690))
         if play_button.clicked:
-            while play_again:
-                play_again , score=gameplay.start_game(cap)
-                my_coins["coins"] +=score
-                with open(r"data\coins.txt", "w") as coin_file :
-                    json.dump(my_coins, coin_file , indent=4)
-            play_again= True
-            cap = cv2.VideoCapture(0)
+            check_game , type = game_mode(cap)
+            if check_game:
+                if type ==0 :
+                    while play_again:
+                        play_again , score=gameplay.start_game(cap,my_data["selected_weapon"])
+                        my_data['coins'] +=score
+                        with open(r"data\data.txt", "w") as coin_file :
+                            json.dump(my_data, coin_file , indent=4)
+                    play_again= True
+                elif type ==1 :
+                    while play_again:
+                        play_again =gameplay.pvp_mode(cap)
+                    play_again= True
         elif store_button.clicked :
             store(cap)
         elif quit_button.clicked:

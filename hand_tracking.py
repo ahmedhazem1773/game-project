@@ -1,11 +1,12 @@
 import cv2
 import mediapipe as mp
 
-def hand_gestures(landmarks,tol=.002): #this class track finger landmarks to detect gestures as commands  
+def hand_gestures(landmarks,tol=.002,left_hand=False): #this class track finger landmarks to detect gestures as commands  
     #add 0.002 tolerance for tracking
     min_y=min(lm.y for lm in landmarks.landmark)
     max_y=max(lm.y for lm in landmarks.landmark)
     min_x=min(lm.x for lm in landmarks.landmark)
+    max_x=max(lm.x for lm in landmarks.landmark)
     thump_tip = landmarks.landmark[4]
     index_finger_tip = landmarks.landmark[8]
 
@@ -14,11 +15,17 @@ def hand_gestures(landmarks,tol=.002): #this class track finger landmarks to det
     elif abs(thump_tip.y-max_y)<=tol:   
         gesture=-1
     else :
-        gesture=0    
-    if index_finger_tip.x-min_x>=tol:
-        shooting = True     
-    else :
-        shooting = False  
+        gesture=0  
+    if left_hand:
+        if max_x-index_finger_tip.x>=tol:
+            shooting = True     
+        else :
+            shooting = False  
+    else:
+        if index_finger_tip.x-min_x>=tol:
+            shooting = True     
+        else :
+            shooting = False  
     return gesture,shooting     
 
 def checkpause(landmarks,tol=.02): # this class check if hand is open by tracking the middle finger tip
