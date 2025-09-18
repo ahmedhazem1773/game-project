@@ -3,9 +3,10 @@ import random
 import Main_window
 import hand_tracking as ht
 import cv2
+import math
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self,groups,width,hight): 
+    def __init__(self,groups,width,hight,is_flipped=True): 
         super().__init__(groups)
         #itialize the player size,color,speed and direction.
         self.surfaces=surface_animation_steady=[]
@@ -14,20 +15,21 @@ class Player(pygame.sprite.Sprite):
             if i < 10 :
                 surface=pygame.image.load(f"attachment/hand/steady_hand/hand0{i}.gif").convert_alpha()
                 surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
-                surface=pygame.transform.flip(surface,True,False)
+                if is_flipped:
+                    surface=pygame.transform.flip(surface,True,False)
                 self.surfaces.append(surface)
             else :
                 surface=pygame.image.load(f"attachment/hand/steady_hand/hand{i}.gif").convert_alpha()
                 surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
-                surface=pygame.transform.flip(surface,True,False)
+                if is_flipped:
+                    surface=pygame.transform.flip(surface,True,False)
                 self.surfaces.append(surface)
         self.image=self.surfaces[0]
         self.w_width = width
         self.w_hight = hight        
         self.rect = self.image.get_rect(midright =(self.w_width,self.w_hight//2)) 
         self.direction = pygame.Vector2(0,0) 
-        self.speed = 500
-        self.mask = pygame.mask.from_surface(self.image)
+        self.speed = 800
 
     def update(self,dt,move=0):
         self.direction.y=0  
@@ -42,7 +44,6 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom>self.w_hight:
             self.rect.bottom=self.w_hight
         self.image, self.i = animat(dt,self.surfaces,self.i) 
-        self.mask=pygame.mask.from_surface(self.image)
         
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self,groups,y_pos,obstacle_type,width,hight):   #y_pos is the vertical position for the obstacle #y_speed is the speed in y axis 
@@ -99,29 +100,53 @@ class Obstacle(pygame.sprite.Sprite):
             False    
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self,player,groups,surfaces,bullet_direction):
+    def __init__(self,player,groups,surfaces,bullet_direction,p2_fire):
         super().__init__(groups)
+        self.w_width=1360
         self.surfaces=surfaces
         self.image=surfaces[0]
         self.i=0
         self.rect=self.image.get_rect(midright = player.rect.midleft)
+        if p2_fire:
+            self.rect=self.image.get_rect(midleft = player.rect.midright)
         self.bullet_direction = bullet_direction
         self.x_speed = 1000
-        self.y_speed = 180
-        if self.bullet_direction == 0:
-            self.direction = pygame.Vector2(-1,0)
-        if self.bullet_direction == 1:
-            self.direction = pygame.Vector2(-1,-1)    
-        if self.bullet_direction == -1:
-            self.direction = pygame.Vector2(-1,1)    
-    
-
+        self.y_speed = 0
+        self.direction = pygame.Vector2(0,0)
+        #bullet vertical speed >> detect the angle that bullet shooten with
+        if self.bullet_direction in (-1,1):
+            self.y_speed = 90 #makes an angle of 5 degrees with the horizontal
+        elif self.bullet_direction in (-2,2):
+            self.y_speed = 180 #makes an angle of 10 degrees with the horizontal
+        elif self.bullet_direction in (-3,3):    
+            self.y_speed = 270 #makes an angle of 15 degrees with the horizontal
+        elif self.bullet_direction in (-4,4):    
+            self.y_speed = 360 #makes an angle of 20 degrees with the horizontal   
+        elif self.bullet_direction in (-5,5):    
+            self.y_speed = 470 #makes an angle of 25 degrees with the horizontal              
+        #bullet direction         
+        if not p2_fire:
+            if self.bullet_direction == 0:
+                self.direction = pygame.Vector2(-1,0)
+            elif self.bullet_direction > 0:
+                self.direction = pygame.Vector2(-1,-1) 
+            elif self.bullet_direction < 0:
+                self.direction = pygame.Vector2(-1,1) 
+        else:
+            if self.bullet_direction == 0:
+                self.direction = pygame.Vector2(1,0)
+            elif self.bullet_direction > 0:
+                self.direction = pygame.Vector2(1,-1) 
+            elif self.bullet_direction < 0:
+                self.direction = pygame.Vector2(1,1)
     def update(self,dt):
         self.rect.x += self.direction.x*self.x_speed*dt
         self.rect.y += self.direction.y*self.y_speed*dt
         self.image, self.i = animat(dt,self.surfaces,self.i) 
         if self.rect.x <0:
-            self.kill()    
+            self.kill()   
+        if self.rect.x >self.w_width-320:     
+            self.kill() 
 
 class Collisions:
     def __init__(self,player,obstacles,shoots):
@@ -131,16 +156,15 @@ class Collisions:
         self.hit=0 #if an collision occur between a bullet and an obstacle >> hit=1 >> score increase
 
     def check_collisions(self): #check if player collide to an obstacle
-       for obs in self.obstacles:
+        for obs in self.obstacles:
            dx = self.player.rect.centerx - obs.rect.centerx
            dy = self.player.rect.centery - obs.rect.centery
            d = (dx**2 + dy**2)**0.5 #distance
            collision_radius = 40 #this number represent the min distance between the player and obstacle before git collision
            if d<collision_radius :
-               return True
-           else:
-               return False
-
+                return True
+        return False
+       
     def bullet_collision(self,all_sprites,obstacle): #check if bullet collide to an obstacle
         hits = pygame.sprite.groupcollide(self.shoots,self.obstacles,True,True) #if no collision happened , hits equal to zero
         if hits:
@@ -148,14 +172,45 @@ class Collisions:
             for bullet,obstacles in hits.items():
                 pos = obstacles[0].rect.center
                 if obstacle.obstacle_type == 1:
-                    float_text = Floating_text("+3",pos,all_sprites) #isplay +3
+                    float_text = Floating_text("+3",pos,all_sprites) #display +3
                 elif obstacle.obstacle_type == 2:
                     float_text = Floating_text("+5",pos,all_sprites) #display +5 score when bullet collide to obstacle   
             return True #it for my waves of enemy to increase numbers of enemy in the wave
         else :     
             self.hit=0
         return False #it for my waves of enemy to increase numbers of enemy in the wave
-    
+
+class PVP_collisions:
+    def __init__(self,player1,player2,p1_shoots1,p2_shoots):
+        self.player1 = player1
+        self.player2 = player2
+        self.p1_shoots = p1_shoots1
+        self.p2_shoots = p2_shoots
+
+    def player1_win(self):
+        for shoot in self.p1_shoots:
+           dx = self.player2.rect.centerx - shoot.rect.centerx
+           dy = self.player2.rect.centery - shoot.rect.centery
+           d = (dx**2 + dy**2)**0.5 #distance
+           collision_radius = 25 
+           if d<collision_radius :
+               return True
+        return False
+
+    def player2_win(self):
+        for shoot in self.p2_shoots:
+           dx = self.player1.rect.centerx - shoot.rect.centerx
+           dy = self.player1.rect.centery - shoot.rect.centery
+           d = (dx**2 + dy**2)**0.5 #distance
+           collision_radius = 25
+           if d<collision_radius :
+               return True
+        return False
+
+    def barriers_collisions(self,p1_shoots,p2_shoots,barriers_group):
+        pygame.sprite.groupcollide(barriers_group,p1_shoots,False,True) 
+        pygame.sprite.groupcollide(barriers_group,p2_shoots,False,True)       
+      
 class Score_counter:
     def __init__(self,width,hight,surf):
         self.total_score = 0 
@@ -179,7 +234,6 @@ class Score_counter:
         score_text = font.render(f"{self.total_score}",True,(221,243,231))
         text_rect = score_text.get_rect(center = (self.w_width//2,self.w_hight-self.w_hight//8))
         self.display_surface.blit(score_text,text_rect) # display the score within a rectangle
-        return self.total_score
 
 class Floating_text(pygame.sprite.Sprite): #display floating text
     def __init__(self,text,pos,groups):
@@ -196,7 +250,42 @@ class Floating_text(pygame.sprite.Sprite): #display floating text
         self.image.set_alpha(self.alpha)
         if self.lifetime < 1:
             self.kill()
-        
+
+class Barriers(pygame.sprite.Sprite):
+    def __init__(self,groups,width,hight,pos,angle,barrier_type):
+        super().__init__(groups)
+        self.width=width
+        self.hight=hight
+        self.image = pygame.Surface((10,80))
+        self.image.fill((0,0,0))
+        self.barrier_type = barrier_type
+        self.center_of_motion = [(self.width-300)/2,self.hight/2]
+        self.radius = 300
+        self.angle = angle
+        if self.barrier_type == 1:
+            self.rect = self.image.get_frect(center = pos)
+        elif self.barrier_type == 2:
+            x=(self.center_of_motion[0] + self.radius*math.cos(self.angle))
+            y=(self.center_of_motion[1] + self.radius*math.sin(self.angle))
+            self.rect = self.image.get_frect(center = (x,y))    
+        self.direction = pygame.Vector2(0,1) 
+        self.y_speed = 300
+        self.cicular_speed = 1.2
+
+    def update(self,dt):
+        if self.barrier_type==1:
+            self.rect.y += self.direction.y*self.y_speed*dt
+            if self.rect.top<=0:
+                self.rect.top=0 
+                self.direction.y*=-1
+            if self.rect.bottom>=self.hight:
+                self.rect.bottom=self.hight 
+                self.direction.y*=-1
+        elif self.barrier_type==2:
+            self.angle+=self.cicular_speed*dt
+            self.rect.centerx = self.center_of_motion[0] + self.radius*math.cos(self.angle)
+            self.rect.centery = self.center_of_motion[1] + self.radius*math.sin(self.angle)
+
 def end_game(display_surface,w_width,w_hight, score,cap):
     font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.ttf", 60)
     game_over_window=pygame.image.load(r"attachment\gawme_over_window.png").convert_alpha()
@@ -232,7 +321,7 @@ def controller(mp_hands,hands,mp_draw,cap,c_width,c_hight):
     #this function take the porocessed frame and convert it to hame actions
     frame,move,fire,pause=None,0,False,False
     keys = pygame.key.get_pressed()
-    frame,stop,shoot,gesture = process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight)
+    frame,stop,shoot,gesture,l_gesture,l_shoot = process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight)
     frame= cv2.flip(frame , 1 )
     if keys[pygame.K_UP]:
         move=1
@@ -242,20 +331,31 @@ def controller(mp_hands,hands,mp_draw,cap,c_width,c_hight):
         move=1
     elif gesture==-1:
         move=-1
-    if keys[pygame.K_SPACE] or shoot:
+    if keys[pygame.K_SPACE] or keys[pygame.K_KP_ENTER] or shoot:
         fire=True
     if keys[pygame.K_ESCAPE] or stop:
         pause = True    
-    return frame,move,fire,pause   
-        
-def shooting(time_delay,last_shoot_time,player,group1,group2,surfaces_bullets,your_score,threshold_score):
-    now = pygame.time.get_ticks()
-    if now - last_shoot_time > time_delay:
-        Bullet(player,[group1,group2],surfaces_bullets,0) 
-        if your_score >= threshold_score:
-            Bullet(player,[group1,group2],surfaces_bullets,1) 
-            Bullet(player,[group1,group2],surfaces_bullets,-1) 
+    return frame,move,fire,pause,l_gesture,l_shoot
 
+def left_hand_controller(l_gesture,l_shoot):
+    l_move,l_fire = 0,False
+    keys = pygame.key.get_pressed()          
+    if keys[pygame.K_w]:
+        l_move=1
+    elif keys[pygame.K_s]:    
+        l_move=-1
+    elif l_gesture==1:
+        l_move=1
+    elif l_gesture==-1:
+        l_move=-1
+    if keys[pygame.K_c] or l_shoot:
+        l_fire=True
+    return l_move,l_fire
+
+def shooting(weapons,last_shoot_time,player,group1,group2,surfaces_bullets,weapon,p2_fire=False):
+    now = pygame.time.get_ticks()
+    if now - last_shoot_time > weapons[weapon]:
+        use_weapon(weapon,player,group1,group2,surfaces_bullets,p2_fire)
         last_shoot_time = now
     return last_shoot_time 
 
@@ -271,7 +371,7 @@ def creat_animation (num_frames,size,row,surface_sheet,flip=False,factor_scale=F
         surface_animation.append(bug)
     return surface_animation
 
-def animat (dt ,surfaces, i) :
+def animat (dt,surfaces,i) :
     i += 20*dt
     surface=surfaces[int(i) % len(surfaces)]
     return surface ,i
@@ -289,6 +389,7 @@ def process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight):
         image = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB) 
         results = hands.process(image)
         stop,shoot,gesture=False,False,None
+        l_gesture,l_shoot = None,False #added for pvp mode >> left hand gesture and shoot
         if results.multi_hand_landmarks: #if camera detect a hand >> true
             open_right,open_left=False,False
             for hand_landmarks,handness in zip(results.multi_hand_landmarks,results.multi_handedness):
@@ -302,6 +403,7 @@ def process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight):
                     gesture,shoot =ht.hand_gestures(hand_landmarks) 
                     open_right=ht.checkpause(hand_landmarks)
                 if label == "Left": 
+                    l_gesture,l_shoot =ht.hand_gestures(hand_landmarks,left_hand=True) 
                     open_left=ht.checkpause(hand_landmarks)    
                 if open_left and open_right : #if poth left and right hand are open , stop the game
                     stop=1
@@ -312,8 +414,22 @@ def process_frame(mp_hands,hands,mp_draw,cap,c_width,c_hight):
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
         if cv2.waitKey(1) & 0xFF == 27:
             break
-        return display_frame,stop,shoot,gesture   
-        
+        return display_frame,stop,shoot,gesture,l_gesture,l_shoot
+
+def use_weapon(weapon,player,group1,group2,surfaces_bullets,p2_fire):
+    if weapon==0:
+        Bullet(player,[group1,group2],surfaces_bullets,0,p2_fire)
+    if weapon==1:
+        Bullet(player,[group1,group2],surfaces_bullets,0,p2_fire)    
+    if weapon==2:
+        for i in [-2,0,2]:
+            Bullet(player,[group1,group2],surfaces_bullets,i,p2_fire)
+    if weapon==3:
+        for i in range(-5,6): 
+            Bullet(player,[group1,group2],surfaces_bullets,i,p2_fire)  
+    if weapon==4:
+        Bullet(player,[group1,group2],surfaces_bullets,0,p2_fire)
+
 def start_game(cap):
     #pygame.init() >>> not needed , already called in the menu module
     #screen initialization
@@ -338,13 +454,11 @@ def start_game(cap):
     num_in_wave=1 
     num_created=0
     all_dead=0
-    #params for upgrade weapon
-    your_score=0
-    threshold_score=50
-    show_upgrade_text=True
+    #select your weapon
+    weapons = [500,250,500,2000] # this list have a unique time_delay for each weapon
+    your_weapon = 0
     #other parameters
     last_shoot_time=0
-    time_delay=500 #delay between every single shoot
     clock = pygame.time.Clock()
     FPS = 60
     running = True
@@ -356,7 +470,7 @@ def start_game(cap):
             dt = 0
             just_unpaused = False
         #take game actions params from controller fun
-        frame,move,fire,pause = controller(mp_hands,hands,mp_draw,cap,300,220)
+        frame,move,fire,pause,_,_ = controller(mp_hands,hands,mp_draw,cap,300,220)
         #events
         for event in pygame.event.get():
             #quit game
@@ -385,7 +499,7 @@ def start_game(cap):
                 obstacle = Obstacle([all_sprites,obstacles],y2,1,w_width-320,w_hight)
         # fire        
         if fire:
-            last_shoot_time = shooting(time_delay,last_shoot_time,player,all_sprites,shoots,surfaces_bullets,your_score,threshold_score)
+            last_shoot_time = shooting(weapons,last_shoot_time,player,all_sprites,shoots,surfaces_bullets,your_weapon)
         #player moving
         player.update(dt,move)
         #pause
@@ -394,6 +508,21 @@ def start_game(cap):
             just_unpaused = True
             if not running :
                 return False,0 
+        #upgrade-weapon text  >> this option no longer available
+        #if your_score >= threshold_score and show_upgrade_text:
+        #   float_text2 = Floating_text("weapon upgraded!!",(500,500),all_sprites)
+        #   show_upgrade_text=False
+        #==========================
+        #update and display screen
+        display_surface.blit(player_back,(1030,-20))    
+        display_surface.blit(play_board, (-240,0))
+        #display frame
+        frame_surface = pygame.surfarray.make_surface(frame)
+        frame_surface = pygame.transform.rotate(frame_surface,-90)
+        display_surface.blit(frame_surface,(w_width-305,w_hight-230))
+        #update and display sprites
+        all_sprites.update(dt)
+        all_sprites.draw(display_surface)
         #collisions
         if collisions.check_collisions():
             checker=end_game(display_surface,w_width,w_hight,score.total_score,cap)
@@ -406,27 +535,138 @@ def start_game(cap):
             num_created = 0 
         elif num_created < num_in_wave :
             num_created += 1
-        #upgrade-weapon text
-        if your_score >= threshold_score and show_upgrade_text:
-           float_text2 = Floating_text("weapon upgraded!!",(500,500),all_sprites)
-           show_upgrade_text=False
+        #update score
+        score.update_score(collisions.hit,obstacle.obstacle_type) #collisions.hit is 1 if a bullet hit an obstacle, else 0
+        pygame.display.update()
+
+def pvp_mode(cap):
+    #screen initialization
+    w_width,w_hight = 1360,720#window width and hight
+    display_surface = pygame.display.set_mode((w_width,w_hight))
+    pygame.display.set_caption("good game")
+    player_back=pygame.image.load(r"attachment\BG_player.png")
+    mp_hands,hands,mp_draw = ht.prepare_tracking()
+    #import surfaces
+    sheet_bullets=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
+    surfaces_bullets1=creat_animation(8,(24,24),4,sheet_bullets,True)
+    surfaces_bullets2=creat_animation(8,(24,24),4,sheet_bullets,False)
+    #groups
+    all_sprites = pygame.sprite.Group()
+    p1_shoots = pygame.sprite.Group()
+    p2_shoots = pygame.sprite.Group() 
+    barriers_group = pygame.sprite.Group()
+    #objects
+    player1 = Player(all_sprites,w_width-300,w_hight)
+    player2 = Player(all_sprites,64,w_hight,False)
+    pvp_collisions = PVP_collisions(player1,player2,p1_shoots,p2_shoots)
+    #select weapons
+    weapons = [500,250,500,2000,100] # this list have a unique time_delay for each weapon
+    player1_weapon = 0
+    player2_weapon = 0
+    #other parameters
+    last_shoot_time1=0
+    last_shoot_time2=0
+    p1_wins=0
+    p2_wins=0
+    who_won=0
+    round=1
+    create_barriers=True
+    clock = pygame.time.Clock()
+    FPS = 60
+    running = True
+    just_unpaused = False
+    while running:
+        #delta time 
+        dt = clock.tick(FPS)/1000
+        if just_unpaused and dt > 0.06:  # Skip large dt after unpause
+            dt = 0
+            just_unpaused = False
+        #take game actions params from controller fun
+        frame,move,fire,pause,l_gesture,l_shoot = controller(mp_hands,hands,mp_draw,cap,300,220)
+        l_move,l_fire = left_hand_controller(l_gesture,l_shoot)
+        #events
+        for event in pygame.event.get():
+            #quit game
+            if event.type == pygame.QUIT:
+                running = False
+                return False,0 
+            #pause game
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running= Main_window.pause(display_surface, w_width,w_hight,cap)
+                    just_unpaused = True
+                    if not running :
+                        return False,0 
+        #fire
+        if fire:
+             last_shoot_time1 = shooting(weapons,last_shoot_time1,player1,all_sprites,p1_shoots,surfaces_bullets1,player1_weapon)
+        if l_fire:
+             last_shoot_time2 = shooting(weapons,last_shoot_time2,player2,all_sprites,p2_shoots,surfaces_bullets2,player2_weapon,True)
+        #player moving
+        player1.update(dt,move)
+        player2.update(dt,l_move)
+        #barriers
+        if round%2==1 and create_barriers:
+            barriers = Barriers((barriers_group,all_sprites),w_width,w_hight,((w_width-250)//2,0),None,1)
+            barriers = Barriers((barriers_group,all_sprites),w_width,w_hight,((w_width-350)//2,w_hight),None,1)
+            create_barriers=False
+        elif round%2==0 and create_barriers:
+            for i in range(0,246,45):
+                barriers = Barriers((barriers_group,all_sprites),w_width,w_hight,None,i,2)
+            create_barriers=False
+        #pause
+        if pause:
+            running= Main_window.pause(display_surface, w_width,w_hight,cap)
+            just_unpaused = True
+            if not running :
+                return False,0         
         #update and display screen
-        display_surface.blit(player_back,(1030,-20))    
-        display_surface.blit(play_board, (-240,0))
-        #display frame
+        display_surface.fill((58,27,30))         
+        display_surface.blit(player_back,(1030,-20))   
+                #display frame
         frame_surface = pygame.surfarray.make_surface(frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         display_surface.blit(frame_surface,(w_width-305,w_hight-230))
         #update and display sprites
         all_sprites.update(dt)
         all_sprites.draw(display_surface)
-        #update score
-        your_score = score.update_score(collisions.hit,obstacle.obstacle_type) #collisions.hit is 1 if a bullet hit an obstacle, else 0
+        #player collisions
+        if pvp_collisions.player1_win():
+           who_won=1           
+           # >>> function to say play 1 win and start the next round after small timedelay
+           temp=end_game(display_surface,w_width,w_hight,0,cap) # >> just temp for testing >> delete later
+           return temp, who_won
+        elif pvp_collisions.player2_win():    
+           who_won=2           
+           # >>> function to say play 2 win and start the next round after small timedelay
+           temp=end_game(display_surface,w_width,w_hight,0,cap) # >> just temp for testing >> delete later
+           return temp,who_won
+        #barriers collisions
+        pvp_collisions.barriers_collisions(p1_shoots,p2_shoots,barriers_group)
+        #round counter
+        if who_won==1:
+            p1_wins+=1
+            round+=1
+            player1_weapon+=1
+            player2_weapon+=1
+            who_won=0
+            create_barriers=True
+        elif who_won==2:
+            p2_wins+=1
+            round+=1
+            player1_weapon+=1
+            player2_weapon+=1 
+            who_won=0           
+            create_barriers=True    
+        if p1_wins==3:
+            pass #function to end game and print player 1 wins!
+        elif p2_wins==3:  
+            pass #function to end game and print player 2 wins!     
         pygame.display.update()
 
 #pygame.quit() >>> not needed , already called in the menu module
 
 #test :
-# pygame.init()
-# start_game()
-# pygame.quit()
+#pygame.init()
+#pvp_mode()
+#pygame.quit()
