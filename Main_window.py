@@ -80,24 +80,45 @@ class weapon ():
 ######################################################
 #u will notice in most funcs that represent a windows i pass a cap object that response of capture the camera we made this to use one cap obj
 #to reduce the delay and any wasting processoring and the strem will mot walk smoth
+def animat (dt,surfaces,i) :
+    i += 32*dt
+    surface=surfaces[int(i) % len(surfaces)]
+    return surface ,i
 def store (cap) :
-    font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
-    coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))
+    font0=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
+    font1=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",20)
+    coin_text = font0.render(f"your coins : {my_data['coins']}",True,(221,243,231))
+    weapon_0_text = font1.render(f"1 shoot\ncall down :\n  500 msec",True,(137,75,0))
+    weapon_1_text = font1.render(f"1 shoot\ncall down :\n  250 msec",True,(137,75,0))
+    weapon_2_text = font1.render(f"3 shoots\ncall down :\n  500 msec",True,(137,75,0))
+    weapon_3_text = font1.render(f"11 shoots\ncall down :\n  2000 msec",True,(137,75,0))
     rect_coin_text =coin_text.get_frect(center=(w_width-120,50))
     #spirit its a class but with common init attribute like surface and rect
     button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
     back_button=button( display_surface=display_surface,surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=((w_width-250)/2,w_hight-120), groups=button_groups)
-    # weapon_1_button=button(display_surface=display_surface,surface=pygame.image.load(r"attachment\buy_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\buy_button_pressed.png").convert_alpha(),pos=(545,440), groups=button_groups)
     weapon_0=weapon(pos=(232,440),groups=button_groups, weapon_num=1, price=0 , bought=my_data["weapon_0"]["bought"], equip=my_data["weapon_0"]["equip"])
     weapon_1=weapon(pos=(442,440),groups=button_groups, weapon_num=1, price=300 , bought=my_data["weapon_1"]["bought"], equip=my_data["weapon_1"]["equip"])
     weapon_2=weapon(pos=(652,440),groups=button_groups, weapon_num=2, price=400 , bought=my_data["weapon_2"]["bought"], equip=my_data["weapon_2"]["equip"])
     weapon_3=weapon(pos=(860,440),groups=button_groups, weapon_num=3, price=500 , bought=my_data["weapon_3"]["bought"], equip=my_data["weapon_3"]["equip"])
-    store_window=pygame.image.load(r"C:\Users\EG.LAPTOP\Desktop\PNG\PNG\Asset 60.png").convert_alpha()
+    weapon_1_price = font1.render(f"price is : {weapon_1.price}",True,(137,75,0))
+    weapon_2_price = font1.render(f"price is : {weapon_2.price}",True,(137,75,0))
+    weapon_3_price = font1.render(f"price is : {weapon_3.price}",True,(137,75,0))
+    #import hands
+    surface_0=surface_animation_steady[0][0]
+    surface_1=surface_animation_steady[1][1]
+    surface_2=surface_animation_steady[2][2]
+    surface_3=surface_animation_steady[3][3]
+    #counter for the animation
+    counter=0
+    store_window=pygame.image.load(r"attachment\store_window.png").convert_alpha()
     BG_store=pygame.image.load(r"attachment\general_BG.jPg").convert_alpha()
     store_rect=store_window.get_frect(center=((w_width-250)/2 ,w_hight/2 ))
     BG_store.blit(store_window,store_rect)
     running=True
+    clock = pygame.time.Clock()
+    FPS = 30
     while running :
+        dt = clock.tick(FPS)/1000
         ret,frame=cap.read()
         display_frame=cv2.resize(frame,(300,220)) #this is the frame to be displayed
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
@@ -107,6 +128,24 @@ def store (cap) :
         display_surface.blit(BG_store, (-10,0))
         display_surface.blit(label_coins,rect_label_coins)
         display_surface.blit(coin_text,rect_coin_text)
+        surface_0 , counter= animat(dt,surface_animation_steady[0],counter) 
+        surface_1 , counter= animat(dt,surface_animation_steady[1],counter+1)
+        surface_2 , counter= animat(dt,surface_animation_steady[2],counter+2) 
+        surface_3 , counter= animat(dt,surface_animation_steady[3],counter+3) 
+        display_surface.blit(surface_0,(160,170)) 
+        display_surface.blit(surface_1,(370,175))
+        display_surface.blit(surface_2,(580,175))
+        display_surface.blit(surface_3,(787,175))
+        display_surface.blit(weapon_0_text,(170,340)) 
+        display_surface.blit(weapon_1_text,(380,340))
+        display_surface.blit(weapon_2_text,(590,340))
+        display_surface.blit(weapon_3_text,(797,340))
+        if not weapon_1.bought:
+            display_surface.blit(weapon_1_price,(380,320))
+        if not weapon_2.bought:
+            display_surface.blit(weapon_2_price,(590,320))
+        if not weapon_3.bought:
+            display_surface.blit(weapon_3_price,(797,320))
         if back_button.clicked:
             for key, value in my_data.items():
                     if key.startswith("weapon_"):  # Only process weapon-related keys
@@ -357,6 +396,17 @@ if __name__ =="__main__" :
             my_data=json.load(data_file)
     except:
         my_data = {"coins": 0,"weapon_0":{"bought":True , "equip":True},"weapon_1":{"bought":False , "equip":False},"weapon_2":{"bought":False , "equip":False},"weapon_3":{"bought":False , "equip":False},"selected_weapon":0}
+    surface_animation_steady=[[],[],[],[]]
+    for c in range(4):
+        for i in range(11):
+            if i < 10 :
+                surface=pygame.image.load(f"attachment/hand/{c}/hand0{i}.gif").convert_alpha()
+                surface=pygame.transform.scale(surface,(surface.get_size()[0]/6,surface.get_size()[1]/6))
+                surface_animation_steady[c].append(surface)
+            else :
+                surface=pygame.image.load(f"attachment/hand/{c}/hand{i}.gif").convert_alpha()
+                surface=pygame.transform.scale(surface,(surface.get_size()[0]/6,surface.get_size()[1]/6))
+                surface_animation_steady[c].append(surface)
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",30)
     font2=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",20)
     coin_text = font.render(f"your coins : {my_data['coins']}",True,(221,243,231))

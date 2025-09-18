@@ -6,20 +6,21 @@ import cv2
 import math
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self,groups,width,hight,is_flipped=True): 
+    def __init__(self,groups,width,hight,is_flipped=True,your_weapon=0): 
         super().__init__(groups)
         #itialize the player size,color,speed and direction.
         self.surfaces=surface_animation_steady=[]
+        self.is_flipped=is_flipped
         self.i=0
         for i in range(11) :
             if i < 10 :
-                surface=pygame.image.load(f"attachment/hand/steady_hand/hand0{i}.gif").convert_alpha()
+                surface=pygame.image.load(f"attachment/hand/{your_weapon}/hand0{i}.gif").convert_alpha()
                 surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
                 if is_flipped:
                     surface=pygame.transform.flip(surface,True,False)
                 self.surfaces.append(surface)
             else :
-                surface=pygame.image.load(f"attachment/hand/steady_hand/hand{i}.gif").convert_alpha()
+                surface=pygame.image.load(f"attachment/hand/{your_weapon}/hand{i}.gif").convert_alpha()
                 surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
                 if is_flipped:
                     surface=pygame.transform.flip(surface,True,False)
@@ -44,6 +45,21 @@ class Player(pygame.sprite.Sprite):
         if self.rect.bottom>self.w_hight:
             self.rect.bottom=self.w_hight
         self.image, self.i = animat(dt,self.surfaces,self.i) 
+    def change_weapon(self,your_weapon):
+        self.surfaces=surface_animation_steady=[]
+        for i in range(11) :
+            if i < 10 :
+                surface=pygame.image.load(f"attachment/hand/{your_weapon}/hand0{i}.gif").convert_alpha()
+                surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
+                if self.is_flipped:
+                    surface=pygame.transform.flip(surface,True,False)
+                self.surfaces.append(surface)
+            else :
+                surface=pygame.image.load(f"attachment/hand/{your_weapon}/hand{i}.gif").convert_alpha()
+                surface=pygame.transform.scale(surface,(surface.get_size()[0]/13,surface.get_size()[1]/13))
+                if self.is_flipped:
+                    surface=pygame.transform.flip(surface,True,False)
+                self.surfaces.append(surface)
         
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self,groups,y_pos,obstacle_type,width,hight):   #y_pos is the vertical position for the obstacle #y_speed is the speed in y axis 
@@ -285,6 +301,8 @@ class Barriers(pygame.sprite.Sprite):
             self.angle+=self.cicular_speed*dt
             self.rect.centerx = self.center_of_motion[0] + self.radius*math.cos(self.angle)
             self.rect.centery = self.center_of_motion[1] + self.radius*math.sin(self.angle)
+    def kill_barrier(self):
+        self.kill()  
 
 def end_game(display_surface,w_width,w_hight,cap, score=False, winner=False):
     font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.ttf", 60)
@@ -488,14 +506,24 @@ def start_game(cap,your_weapon):
     player_back=pygame.image.load(r"attachment\BG_player.png").convert_alpha()
     mp_hands,hands,mp_draw = ht.prepare_tracking()
     #import surfaces
-    sheet_bullets=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
-    surfaces_bullets=creat_animation(8,(24,24),4,sheet_bullets,True)
+    if your_weapon==0 :
+        sheet_bullets_0and1=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
+        surfaces_bullets=creat_animation(8,(24,24),9,sheet_bullets_0and1,True)
+    elif your_weapon==1:
+        sheet_bullets_0and1=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
+        surfaces_bullets=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
+    elif your_weapon==2 :
+        sheet_bullets_2=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2A.png")
+        surfaces_bullets=creat_animation(8,(24,24),14,sheet_bullets_2,True)
+    elif your_weapon==3 :
+        sheet_bullets_3=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2C.png")
+        surfaces_bullets=creat_animation(8,(24,24),14,sheet_bullets_3,True)
     #groups
     all_sprites = pygame.sprite.Group()
     obstacles = pygame.sprite.Group()
     shoots = pygame.sprite.Group()
     #objects
-    player = Player(all_sprites,w_width-300,w_hight)
+    player = Player(all_sprites,w_width-300,w_hight,your_weapon)
     collisions=Collisions(player,obstacles,shoots)
     score = Score_counter(w_width,w_hight,display_surface)
     #obstacles respone params : those for my waves to increase smothly in number of enemy in one wave
@@ -594,6 +622,7 @@ def pvp_mode(cap):
     #screen initialization
     w_width,w_hight = 1360,720#window width and hight
     display_surface = pygame.display.set_mode((w_width,w_hight))
+    play_boardgame=pygame.image.load(r"C:\Users\EG.LAPTOP\Downloads\Gemini_Generated_Image_cj434ucj434ucj43.jpg").convert_alpha()
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",70)
     score_text = font.render(f"{0} : {0}",True,(221,243,231))
     rect_score_text =score_text.get_frect(center=(w_width-160,145))
@@ -605,9 +634,11 @@ def pvp_mode(cap):
     rect_players_score=players_score.get_frect(center=(w_width-160,140))
     mp_hands,hands,mp_draw = ht.prepare_tracking()
     #import surfaces
-    sheet_bullets=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
-    surfaces_bullets1=creat_animation(8,(24,24),4,sheet_bullets,True)
-    surfaces_bullets2=creat_animation(8,(24,24),4,sheet_bullets,False)
+    sheet_bullets_0and1=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
+    sheet_bullets_2=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2A.png")
+    sheet_bullets_3=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2C.png")
+    surfaces_bulletsp1=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
+    surfaces_bulletsp2=creat_animation(8,(24,24),4,sheet_bullets_0and1,False)
     #groups
     all_sprites = pygame.sprite.Group()
     p1_shoots = pygame.sprite.Group()
@@ -657,9 +688,9 @@ def pvp_mode(cap):
                         return False
         #fire
         if fire:
-             last_shoot_time1 = shooting(weapons,last_shoot_time1,player1,all_sprites,p1_shoots,surfaces_bullets1,player1_weapon)
+             last_shoot_time1 = shooting(weapons,last_shoot_time1,player1,all_sprites,p1_shoots,surfaces_bulletsp1,player1_weapon)
         if l_fire:
-             last_shoot_time2 = shooting(weapons,last_shoot_time2,player2,all_sprites,p2_shoots,surfaces_bullets2,player2_weapon,True)
+             last_shoot_time2 = shooting(weapons,last_shoot_time2,player2,all_sprites,p2_shoots,surfaces_bulletsp2,player2_weapon,True)
         #player moving
         player1.update(dt,move)
         player2.update(dt,l_move)
@@ -679,7 +710,7 @@ def pvp_mode(cap):
             if not running :
                 return False        
         #update and display screen
-        display_surface.fill((58,27,30))         
+        display_surface.blit(play_boardgame,(0,0))       
         display_surface.blit(player_back,(1030,-20))   
                 #display frame
         frame_surface = pygame.surfarray.make_surface(frame)
@@ -703,7 +734,23 @@ def pvp_mode(cap):
             round+=1
             player1_weapon+=1
             player2_weapon+=1
+            player1.change_weapon(player1_weapon%4)
+            player2.change_weapon(player2_weapon%4)
+            if player1_weapon%4==0 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),4,sheet_bullets_0and1,False)
+            elif player1_weapon%4==1:
+                surfaces_bulletsp1=creat_animation(8,(24,24),9,sheet_bullets_0and1,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),9,sheet_bullets_0and1,False)
+            elif player1_weapon%4==2 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),14,sheet_bullets_2,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),14,sheet_bullets_2,False)
+            elif player1_weapon%4==3 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),14,sheet_bullets_3,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),14,sheet_bullets_3,False)
             who_won=0
+            for barrier in barriers_group:
+                barrier.kill_barrier()
             create_barriers=True
             score_text = font.render(f"{p2_wins} : {p1_wins}",True,(221,243,231))
             if p1_wins<3:
@@ -715,7 +762,23 @@ def pvp_mode(cap):
             round+=1
             player1_weapon+=1
             player2_weapon+=1 
-            who_won=0           
+            player1.change_weapon(player1_weapon%4)
+            player2.change_weapon(player2_weapon%4)
+            if player1_weapon%4==0 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),4,sheet_bullets_0and1,False)
+            elif player1_weapon%4==1:
+                surfaces_bulletsp1=creat_animation(8,(24,24),9,sheet_bullets_0and1,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),9,sheet_bullets_0and1,False)
+            elif player1_weapon%4==2 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),14,sheet_bullets_2,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),14,sheet_bullets_2,False)
+            elif player1_weapon%4==3 :
+                surfaces_bulletsp1=creat_animation(8,(24,24),14,sheet_bullets_3,True)
+                surfaces_bulletsp2=creat_animation(8,(24,24),14,sheet_bullets_3,False)
+            who_won=0 
+            for barrier in barriers_group:
+                barrier.kill_barrier()          
             create_barriers=True
             score_text = font.render(f"{p2_wins} : {p1_wins}",True,(221,243,231))
             if p2_wins<3:

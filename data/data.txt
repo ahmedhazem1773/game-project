@@ -1,0 +1,20 @@
+{
+    "coins": 0,
+    "weapon_0": {
+        "bought": true,
+        "equip": true
+    },
+    "weapon_1": {
+        "bought": false,
+        "equip": false
+    },
+    "weapon_2": {
+        "bought": true,
+        "equip": false
+    },
+    "weapon_3": {
+        "bought": false,
+        "equip": false
+    },
+    "selected_weapon": 0
+}
