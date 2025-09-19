@@ -99,9 +99,9 @@ def store (cap) :
     button_groups=pygame.sprite.Group() # to use some spirt in mu opinion are belong together
     back_button=button( display_surface=display_surface,surface=pygame.image.load(r"attachment\back_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_button_pressed.png").convert_alpha(),pos=((w_width-250)/2,w_hight-120), groups=button_groups)
     weapon_0=weapon(pos=(232,440),groups=button_groups, weapon_num=1, price=0 , bought=my_data["weapon_0"]["bought"], equip=my_data["weapon_0"]["equip"])
-    weapon_1=weapon(pos=(442,440),groups=button_groups, weapon_num=1, price=300 , bought=my_data["weapon_1"]["bought"], equip=my_data["weapon_1"]["equip"])
-    weapon_2=weapon(pos=(652,440),groups=button_groups, weapon_num=2, price=400 , bought=my_data["weapon_2"]["bought"], equip=my_data["weapon_2"]["equip"])
-    weapon_3=weapon(pos=(860,440),groups=button_groups, weapon_num=3, price=500 , bought=my_data["weapon_3"]["bought"], equip=my_data["weapon_3"]["equip"])
+    weapon_1=weapon(pos=(442,440),groups=button_groups, weapon_num=1, price=500 , bought=my_data["weapon_1"]["bought"], equip=my_data["weapon_1"]["equip"])
+    weapon_2=weapon(pos=(652,440),groups=button_groups, weapon_num=2, price=1000 , bought=my_data["weapon_2"]["bought"], equip=my_data["weapon_2"]["equip"])
+    weapon_3=weapon(pos=(860,440),groups=button_groups, weapon_num=3, price=2000 , bought=my_data["weapon_3"]["bought"], equip=my_data["weapon_3"]["equip"])
     weapon_1_price = font1.render(f"price is : {weapon_1.price}",True,(137,75,0))
     weapon_2_price = font1.render(f"price is : {weapon_2.price}",True,(137,75,0))
     weapon_3_price = font1.render(f"price is : {weapon_3.price}",True,(137,75,0))
