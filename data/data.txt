@@ -1,5 +1,5 @@
 {
-    "coins": 0,
+    "coins": 550,
     "weapon_0": {
         "bought": true,
         "equip": true

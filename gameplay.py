@@ -6,7 +6,7 @@ import cv2
 import math
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self,groups,width,hight,is_flipped=True,your_weapon=0): 
+    def __init__(self,groups,width,hight,your_weapon,is_flipped=True): 
         super().__init__(groups)
         #itialize the player size,color,speed and direction.
         self.surfaces=surface_animation_steady=[]
@@ -309,10 +309,11 @@ def end_game(display_surface,w_width,w_hight,cap, score=False, winner=False):
     game_over_window=pygame.image.load(r"attachment\gawme_over_window.png").convert_alpha()
     rect_game_over=game_over_window.get_frect(center =((w_width-80)/2,w_hight/2))
     if score:
-        showing_the_text= font.render(f"your score is : {score}",True,(221,243,231)) 
+        showing_the_text= font.render(f"your score is : {score}",True,(221,243,231))
+        text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250)) 
     elif winner:
         showing_the_text= font.render(f"the winner is : {winner}",True,(221,243,231)) 
-    text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250))
+        text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250))
     button_groups=pygame.sprite.Group()
     play_again_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\play_again_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\play_again_button_pressed.png").convert_alpha(),pos=(800,400), groups=button_groups)
     back_MM_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\back_MM_inverted_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_MM_inverted_button_pressed.png").convert_alpha(),pos=(500,400), groups=button_groups)
@@ -508,10 +509,10 @@ def start_game(cap,your_weapon):
     #import surfaces
     if your_weapon==0 :
         sheet_bullets_0and1=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
-        surfaces_bullets=creat_animation(8,(24,24),9,sheet_bullets_0and1,True)
+        surfaces_bullets=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
     elif your_weapon==1:
         sheet_bullets_0and1=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2B.png")
-        surfaces_bullets=creat_animation(8,(24,24),4,sheet_bullets_0and1,True)
+        surfaces_bullets=creat_animation(8,(24,24),9,sheet_bullets_0and1,True)
     elif your_weapon==2 :
         sheet_bullets_2=pygame.image.load(r"attachment\Bullet 24x24 Free Part 2A.png")
         surfaces_bullets=creat_animation(8,(24,24),14,sheet_bullets_2,True)
@@ -645,8 +646,8 @@ def pvp_mode(cap):
     p2_shoots = pygame.sprite.Group() 
     barriers_group = pygame.sprite.Group()
     #objects
-    player1 = Player(all_sprites,w_width-300,w_hight)
-    player2 = Player(all_sprites,64,w_hight,False)
+    player1 = Player(all_sprites,w_width-300,w_hight,your_weapon=0)
+    player2 = Player(all_sprites,64,w_hight,0,False)
     pvp_collisions = PVP_collisions(player1,player2,p1_shoots,p2_shoots)
     #select weapons
     weapons = [500,250,500,2000,100] # this list have a unique time_delay for each weapon
