@@ -337,10 +337,8 @@ def are_u_sure (display_surface ,w_width,w_hight, cap) :
         display_frame = cv2.cvtColor(display_frame,cv2.COLOR_BGR2RGB)
         display_surface.blit(BG_check,rect_BG_check)
         if yes_button.clicked :
-            print("yes")
             return False # this mean u sure want to quit 
         elif no_button.clicked :
-            print("no")
             return True
         for event in pygame.event.get() :
             if event.type == pygame.QUIT: 
