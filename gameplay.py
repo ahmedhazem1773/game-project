@@ -308,12 +308,10 @@ def end_game(display_surface,w_width,w_hight,cap, score=False, winner=False):
     font = pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.ttf", 60)
     game_over_window=pygame.image.load(r"attachment\gawme_over_window.png").convert_alpha()
     rect_game_over=game_over_window.get_frect(center =((w_width-80)/2,w_hight/2))
-    if score:
-        showing_the_text= font.render(f"your score is : {score}",True,(221,243,231))
-        text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250)) 
-    elif winner:
+    showing_the_text=font.render(f"your score is : {score}",True,(221,243,231)) 
+    if winner:
         showing_the_text= font.render(f"the winner is : {winner}",True,(221,243,231)) 
-        text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250))
+    text_rect = showing_the_text.get_rect(center = ((w_width-80)//2,250))
     button_groups=pygame.sprite.Group()
     play_again_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\play_again_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\play_again_button_pressed.png").convert_alpha(),pos=(800,400), groups=button_groups)
     back_MM_button=Main_window.button(display_surface=display_surface,surface=pygame.image.load(r"attachment\back_MM_inverted_button.png").convert_alpha(),hover_surface=pygame.image.load(r"attachment\back_MM_inverted_button_pressed.png").convert_alpha(),pos=(500,400), groups=button_groups)
@@ -325,20 +323,23 @@ def end_game(display_surface,w_width,w_hight,cap, score=False, winner=False):
         display_surface.blit(game_over_window,rect_game_over)
         display_surface.blit(showing_the_text,text_rect)
         if play_again_button.clicked :
-            if score :
-                return True , score
+            if winner :
+                return True 
             else :
-                return True
+                return True , score
         elif back_MM_button.clicked :
             running=False
-            if score:
-                return False , score
+            if winner:
+                return False 
             else :
-                return False
+                return False , score
         for event in pygame.event.get() :
             if event.type == pygame.QUIT : 
                 running=False
-                return False , score
+                if winner:
+                    return False 
+                else :
+                    return False , score
         frame_surface = pygame.surfarray.make_surface(display_frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         display_surface.blit(frame_surface,(w_width-305,w_hight-230))
@@ -623,7 +624,7 @@ def pvp_mode(cap):
     #screen initialization
     w_width,w_hight = 1360,720#window width and hight
     display_surface = pygame.display.set_mode((w_width,w_hight))
-    play_boardgame=pygame.image.load(r"C:\Users\EG.LAPTOP\Downloads\Gemini_Generated_Image_cj434ucj434ucj43.jpg").convert_alpha()
+    play_boardgame=pygame.image.load(r"attachment\BG_pvp.jpg").convert_alpha()
     font=pygame.font.Font(r"attachment\jungle-adventurer\JungleAdventurer.otf",70)
     score_text = font.render(f"{0} : {0}",True,(221,243,231))
     rect_score_text =score_text.get_frect(center=(w_width-160,145))

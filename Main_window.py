@@ -3,6 +3,8 @@ import random
 import gameplay
 import json
 import cv2
+import os 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 #################this class for make a button wether u have a image or u will write 
 class button (pygame.sprite.Sprite) :
     def __init__(self,pos,display_surface, text_button=None, size=None ,font_path=None,color="white", surface=False ,hover_surface=False,bg_color=None, groups=None):
@@ -196,7 +198,7 @@ def store (cap) :
                     my_data['coins'] -=weapon_1.price
                     weapon_1.bought= True
                     weapon_1.button.image=weapon_1.equip_button
-                    weapon_1.button.hover_surface=False
+                    weapon_1.button.hover_surface=weapon_1.equip_button_pressed
                     my_data["weapon_1"]["bought"]=True
         elif weapon_2.button.clicked :
             if weapon_2.bought :
@@ -225,7 +227,7 @@ def store (cap) :
                     my_data['coins'] -=weapon_2.price
                     weapon_2.bought= True
                     weapon_2.button.image=weapon_2.equip_button
-                    weapon_2.button.hover_surface=False
+                    weapon_2.button.hover_surface=weapon_2.equip_button_pressed
                     my_data["weapon_2"]["bought"]=True
         elif weapon_3.button.clicked :
             if weapon_3.bought :
@@ -254,7 +256,7 @@ def store (cap) :
                     my_data['coins'] -=weapon_3.price
                     weapon_3.bought= True
                     weapon_3.button.image=weapon_3.equip_button
-                    weapon_3.button.hover_surface=False
+                    weapon_3.button.hover_surface=weapon_3.equip_button_pressed
                     my_data["weapon_3"]["bought"]=True
         for event in pygame.event.get() :
             if event.type == pygame.QUIT :
@@ -462,7 +464,7 @@ if __name__ =="__main__" :
                 running_main=False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    running_main=False
+                    running_main=are_u_sure(display_surface , w_width,w_hight, cap)
         frame_surface = pygame.surfarray.make_surface(display_frame)
         frame_surface = pygame.transform.rotate(frame_surface,-90)
         # frame_surface = pygame.transform.flip(frame_surface,True,False)
