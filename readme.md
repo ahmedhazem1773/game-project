@@ -73,14 +73,27 @@ Coins are collected as your score in each round, making every game both rewardin
 ## Requirements & Installation  
 - Notice : The Python version used is 3.12 because it is  mediapipe module requiments for the last version of it 
 - All required libraries are listed in requirements.txt 
+- The game is supported on **Windows operating systems** only.
 
 ---
 
 ## Authors
 
-Abdulrahman Ehab – Gameplay programming, hand gesture controls, and game logic.
-Ahmed Hazem – Art design, menus logic, and data store.
-Abdulrahman Ehab & Ahmed Hazem – Project idea and overall development.
+## 👥 Team Contributions  
+
+**[Abdulrahman Ehab](https://github.com/abdo-ehab23)**  
+- Gameplay programming and core game logic (gameplay.py).  
+- Hand detection, tracking, and gesture controls (full implementation).  
+- Feature development such as weapons and game modes.
+
+**[Ahmed Hazem](https://github.com/ahmedhazem1773)**  
+- Art design.  
+- Full implementation of the game menu and menus logic (menu.py).  
+- Data storage logic.  
+- Integration & parallelization of visualization inside gameplay.py.  
+
+*Abdulrahman Ehab & Ahmed Hazem*  
+- Project idea and overall development.
 
 ---
 
@@ -106,7 +119,7 @@ Player vs Player
 ```bash
 
 # Clone the repository
-git clone https://github.com/username/game-project.git
+git clone https://github.com/ahmedhazem1773/game-project.git
 cd game-project
 
 # Install the requirements
